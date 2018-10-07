@@ -66,6 +66,7 @@ need them.
 
 -}
 
+import Browser exposing (..)
 import Browser.Navigation exposing (..)
 import Dict
 import Html exposing (Html)
@@ -421,7 +422,7 @@ to do with the `NavigationApp` structure before turning it into a `Program`.
 -}
 runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags model msg
 runNavigationAppWithFlags app =
-    Navigation.programWithFlags app.locationToMessage
+    Browser.application app.locationToMessage
         { init = app.init
         , update = app.update
         , view = app.view
