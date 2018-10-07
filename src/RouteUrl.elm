@@ -2,7 +2,6 @@ module RouteUrl exposing
     ( App, AppWithFlags
     , UrlChange, HistoryEntry(..)
     , programWithFlags, RouteUrlProgram
-    , NavigationApp, navigationApp
     , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
     , WrappedModel, unwrapModel, mapModel
     , WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
@@ -59,7 +58,6 @@ If your initialization needs are more complex, you may find some of the
 remaining types and function to be of interest. You won't usually
 need them.
 
-@docs NavigationApp, navigationApp, runNavigationApp
 @docs NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
 @docs WrappedModel, unwrapModel, mapModel
 @docs WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
@@ -327,26 +325,6 @@ wrapLocation =
 
 
 {-| A type which represents the various inputs to
-[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program).
-
-You can produce this via [`navigationApp`](#navigationApp). Then, you can supply
-this to [`runNavigationApp`](#runNavigationApp) in order to create a `Program`.
-
-Normally you don't need this -- you can just use [`program`](#program).
-However, `NavigationApp` could be useful if you want to do any further wrapping
-of its functions.
-
--}
-type alias NavigationApp model msg =
-    { locationToMessage : Url -> msg
-    , init : Url -> ( model, Cmd msg )
-    , update : msg -> model -> ( model, Cmd msg )
-    , view : model -> Html msg
-    , subscriptions : model -> Sub msg
-    }
-
-
-{-| A type which represents the various inputs to
 [`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags).
 
 You can produce this via [`navigationAppWithFlags`](#navigationAppWithFlags). Then, you can supply
@@ -363,28 +341,6 @@ type alias NavigationAppWithFlags model msg flags =
     , update : msg -> model -> ( model, Cmd msg )
     , view : model -> Html msg
     , subscriptions : model -> Sub msg
-    }
-
-
-{-| Given your configuration, this function does some wrapping and produces
-the functions which
-[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program)
-requires.
-
-Normally, you don't need this -- you can just use [`program`](#program).
-
--}
-navigationApp : App model msg -> NavigationApp (WrappedModel model) (WrappedMsg msg)
-navigationApp app =
-    let
-        common =
-            app2Common app
-    in
-    { locationToMessage = RouterMsg
-    , init = init app.init common
-    , update = update common
-    , view = view common
-    , subscriptions = subscriptions common
     }
 
 
