@@ -64,7 +64,6 @@ will be done for you.
 -}
 
 import Dict exposing (Dict)
-import Erl
 import Http exposing (decodeUri, encodeUri)
 import Regex exposing (HowMany(..), regex, replace)
 import RouteUrl exposing (HistoryEntry(..), UrlChange)

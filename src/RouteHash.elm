@@ -45,7 +45,6 @@ be removed in a future version of elm-route-url.
 
 import Html exposing (Html)
 import Http exposing (decodeUri, encodeUri)
-import Navigation exposing (Location)
 import RouteUrl
     exposing
         ( App

@@ -67,9 +67,7 @@ need them.
 -}
 
 import Dict
-import Erl exposing (Url)
 import Html exposing (Html)
-import Navigation exposing (Location)
 import String exposing (startsWith)
 import Update.Extra exposing (sequence)
 
