@@ -141,7 +141,7 @@ which are described above, under [`App`](#App).
 type alias AppWithFlags model msg flags =
     { delta2url : model -> model -> Maybe UrlChange
     , location2messages : Url -> List msg
-    , init : flags -> ( model, Cmd msg )
+    , init : flags -> Key -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Html msg
@@ -326,7 +326,7 @@ of its functions.
 -}
 type alias NavigationAppWithFlags model msg flags =
     { locationToMessage : Url -> msg
-    , init : flags -> Url -> ( model, Cmd msg )
+    , init : flags -> Url -> Key -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , view : model -> Html msg
     , subscriptions : model -> Sub msg
@@ -431,11 +431,11 @@ subscriptions app (WrappedModel model _) =
 
 {-| Call the provided init function with the user's part of the model
 -}
-initWithFlags : (flags -> ( model, Cmd msg )) -> AppCommon model msg -> flags -> Url -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-initWithFlags appInit app flags location =
+initWithFlags : (flags -> Key -> ( model, Cmd msg )) -> AppCommon model msg -> flags -> Url -> Key -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+initWithFlags appInit app flags location key =
     let
         ( userModel, command ) =
-            appInit flags
+            appInit flags key
                 |> sequence app.update (app.location2messages location)
 
         routerModel =
