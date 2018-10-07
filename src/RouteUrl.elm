@@ -144,7 +144,7 @@ type alias AppWithFlags model msg flags =
     , init : flags -> Key -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
-    , view : model -> Html msg
+    , view : model -> Document msg
     }
 
 
@@ -156,7 +156,7 @@ type alias AppCommon model msg =
     , location2messages : Url -> List msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
-    , view : model -> Html msg
+    , view : model -> Document msg
     }
 
 
@@ -328,7 +328,7 @@ type alias NavigationAppWithFlags model msg flags =
     { locationToMessage : Url -> msg
     , init : flags -> Url -> Key -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
-    , view : model -> Html msg
+    , view : model -> Document msg
     , subscriptions : model -> Sub msg
     }
 
@@ -415,10 +415,17 @@ programWithFlags =
 
 {-| Call the provided view function with the user's part of the model
 -}
-view : AppCommon model msg -> WrappedModel model -> Html (WrappedMsg msg)
+view : AppCommon model msg -> WrappedModel model -> Document (WrappedMsg msg)
 view app (WrappedModel model _) =
     app.view model
-        |> Html.map UserMsg
+        |> docMap UserMsg
+
+
+docMap : (a -> msg) -> Document a -> Document msg
+docMap fn doc =
+    { title = doc.title
+    , body = List.map (Html.map fn) doc.body
+    }
 
 
 {-| Call the provided subscriptions function with the user's part of the model
