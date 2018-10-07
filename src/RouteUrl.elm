@@ -1,5 +1,5 @@
 module RouteUrl exposing
-    ( App, AppWithFlags
+    ( AppWithFlags
     , UrlChange, HistoryEntry(..)
     , programWithFlags, RouteUrlProgram
     , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
@@ -75,57 +75,56 @@ import Url exposing (..)
 
 
 -- THINGS CLIENTS PROVIDE
+{- The configuration required to use this module to create a `Program`.
 
+   The `init`, `update`, `subscriptions` and `view` fields have the same meaning
+   as they do in [`Html.program`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#program)
+   -- that is, you should provide what you normally provide to that function.
 
-{-| The configuration required to use this module to create a `Program`.
+   So, the "special" fields are the `delta2url` function and the
+   `location2messages` function.
 
-The `init`, `update`, `subscriptions` and `view` fields have the same meaning
-as they do in [`Html.program`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#program)
--- that is, you should provide what you normally provide to that function.
+     - `delta2url` will be called when your model changes. The first parameter is
+       the model's previous value, and the second is the model's new value.
 
-So, the "special" fields are the `delta2url` function and the
-`location2messages` function.
+       Your function should return a `Just UrlChange` if a new URL should be
+       displayed in the browser's location bar (or `Nothing` if no change to the URL
+       is needed). This library will check the current URL before setting a new one,
+       so you need not worry about setting duplicate URLs -- that will be
+       automatically avoided.
 
-  - `delta2url` will be called when your model changes. The first parameter is
-    the model's previous value, and the second is the model's new value.
+       The reason we provide both the previous and current model for your
+       consideration is that sometimes you may want to do something differently
+       depending on the nature of the change in the model, not just the new value.
+       For instance, it might make the difference between using `NewEntry` or
+       `ModifyEntry` to make the change.
 
-    Your function should return a `Just UrlChange` if a new URL should be
-    displayed in the browser's location bar (or `Nothing` if no change to the URL
-    is needed). This library will check the current URL before setting a new one,
-    so you need not worry about setting duplicate URLs -- that will be
-    automatically avoided.
+       Note that this function will _not_ be called when processing messages
+       returned from your `location2messages` function, since in that case the
+       URL has already been set.
 
-    The reason we provide both the previous and current model for your
-    consideration is that sometimes you may want to do something differently
-    depending on the nature of the change in the model, not just the new value.
-    For instance, it might make the difference between using `NewEntry` or
-    `ModifyEntry` to make the change.
+     - `location2messages` will be called when a change in the browser's URL is
+       detected, either because the user followed a link, typed something in the
+       location bar, or used the back or forward buttons.
 
-    Note that this function will _not_ be called when processing messages
-    returned from your `location2messages` function, since in that case the
-    URL has already been set.
+       Note that this function will _not_ be called when your `delta2url` method
+       initiates a `UrlChange` -- since in that case, the relevant change in the
+       model has already occurred.
 
-  - `location2messages` will be called when a change in the browser's URL is
-    detected, either because the user followed a link, typed something in the
-    location bar, or used the back or forward buttons.
-
-    Note that this function will _not_ be called when your `delta2url` method
-    initiates a `UrlChange` -- since in that case, the relevant change in the
-    model has already occurred.
-
-    Your function should return a list of messages that your `update` function
-    can respond to. Those messages will be fed into your app, to produce the
-    changes to the model that the new URL implies.
+       Your function should return a list of messages that your `update` function
+       can respond to. Those messages will be fed into your app, to produce the
+       changes to the model that the new URL implies.
 
 -}
-type alias App model msg =
-    { delta2url : model -> model -> Maybe UrlChange
-    , location2messages : Url -> List msg
-    , init : ( model, Cmd msg )
-    , update : msg -> model -> ( model, Cmd msg )
-    , subscriptions : model -> Sub msg
-    , view : model -> Html msg
-    }
+{- type alias App model msg =
+   { delta2url : model -> model -> Maybe UrlChange
+   , location2messages : Url -> List msg
+   , init : ( model, Cmd msg )
+   , update : msg -> model -> ( model, Cmd msg )
+   , subscriptions : model -> Sub msg
+   , view : model -> Document msg
+   }
+-}
 
 
 {-| The configuration needed to use this module to make a `Program flags`.
@@ -158,16 +157,6 @@ type alias AppCommon model msg =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Html msg
-    }
-
-
-app2Common : App model msg -> AppCommon model msg
-app2Common app =
-    { delta2url = app.delta2url
-    , location2messages = app.location2messages
-    , update = app.update
-    , subscriptions = app.subscriptions
-    , view = app.view
     }
 
 
