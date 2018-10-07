@@ -1,8 +1,8 @@
 module RouteUrl exposing
     ( App, AppWithFlags
     , UrlChange, HistoryEntry(..)
-    , program, programWithFlags, RouteUrlProgram
-    , NavigationApp, navigationApp, runNavigationApp
+    , programWithFlags, RouteUrlProgram
+    , NavigationApp, navigationApp
     , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
     , WrappedModel, unwrapModel, mapModel
     , WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
@@ -419,26 +419,6 @@ sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
 
 -}
-runNavigationApp : NavigationApp model msg -> Program Never model msg
-runNavigationApp app =
-    Navigation.program app.locationToMessage
-        { init = app.init
-        , update = app.update
-        , view = app.view
-        , subscriptions = app.subscriptions
-        }
-
-
-{-| Turns the output from [`navigationApp`](#navigationApp)
-into a `Program` that you can assign to your `main` function.
-
-For convenience, you will usually want to just use [`program`](#program),
-which goes directly from the required
-configuration to a `Program`. You would only want `runNavigationApp` for the
-sake of composability -- that is, in case there is something further you want
-to do with the `NavigationApp` structure before turning it into a `Program`.
-
--}
 runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags model msg
 runNavigationAppWithFlags app =
     Navigation.programWithFlags app.locationToMessage
@@ -473,14 +453,6 @@ It's exactly the same type, but looks a little nicer.
 -}
 type alias RouteUrlProgram flags model msg =
     Program flags (WrappedModel model) (WrappedMsg msg)
-
-
-{-| Turns your configuration into a `Program` that you can assign to your
-`main` function.
--}
-program : App model msg -> RouteUrlProgram Never model msg
-program =
-    runNavigationApp << navigationApp
 
 
 {-| Turns your configuration into a `Program flags` that you can assign to your
