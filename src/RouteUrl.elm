@@ -529,7 +529,7 @@ normalizeUrl old change =
             \url -> url2path old ++ url
 
          else if startsWith "#" change.url then
-            \url -> url2path old ++ old.query ++ url
+            \url -> url2path old ++ Maybe.withDefault "" old.query ++ url
 
          else
             \url -> url
