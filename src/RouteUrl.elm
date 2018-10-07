@@ -496,11 +496,16 @@ mapUrl func c1 =
 
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
 checkDistinctUrl old new =
-    if fromString new.url == old then
-        Nothing
+    case fromString new.url of
+        Just newu ->
+            if newu == old then
+                Nothing
 
-    else
-        Just new
+            else
+                Just new
+
+        Nothing ->
+            Just new
 
 
 url2path : Url -> String
