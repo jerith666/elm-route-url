@@ -1,19 +1,9 @@
-module RouteHash
-    exposing
-        ( HashUpdate
-        , set
-        , replace
-        , apply
-        , map
-        , extract
-        , Config
-        , ConfigWithFlags
-        , defaultPrefix
-        , app
-        , appWithFlags
-        , program
-        , programWithFlags
-        )
+module RouteHash exposing
+    ( Config, ConfigWithFlags, defaultPrefix
+    , HashUpdate, set, replace, apply, map, extract
+    , program, programWithFlags
+    , app, appWithFlags
+    )
 
 {-| This module implements the old elm-route-hash API as closely as possible,
 given the changes required for elm-route-url.
@@ -53,26 +43,26 @@ be removed in a future version of elm-route-url.
 
 -}
 
-import String exposing (uncons, split)
-import Http exposing (decodeUri, encodeUri)
 import Html exposing (Html)
+import Http exposing (decodeUri, encodeUri)
 import Navigation exposing (Location)
 import RouteUrl
     exposing
-        ( NavigationApp
-        , NavigationAppWithFlags
-        , App
+        ( App
         , AppWithFlags
+        , HistoryEntry(..)
+        , NavigationApp
+        , NavigationAppWithFlags
+        , RouteUrlProgram
+        , UrlChange
         , WrappedModel
         , WrappedMsg
-        , UrlChange
-        , HistoryEntry(NewEntry, ModifyEntry)
         , navigationApp
         , navigationAppWithFlags
         , runNavigationApp
         , runNavigationAppWithFlags
-        , RouteUrlProgram
         )
+import String exposing (split, uncons)
 
 
 {-| An opaque type which represents an update to the hash portion of the
@@ -350,6 +340,7 @@ removeInitial initial original =
         Just ( first, rest ) ->
             if first == initial then
                 rest
+
             else
                 original
 

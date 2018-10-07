@@ -1,30 +1,11 @@
-module RouteUrl.Builder
-    exposing
-        ( Builder
-        , builder
-        , entry
-        , newEntry
-        , modifyEntry
-        , path
-        , modifyPath
-        , prependToPath
-        , appendToPath
-        , replacePath
-        , query
-        , modifyQuery
-        , insertQuery
-        , addQuery
-        , removeQuery
-        , getQuery
-        , replaceQuery
-        , hash
-        , modifyHash
-        , replaceHash
-        , toUrlChange
-        , toHashChange
-        , fromUrl
-        , fromHash
-        )
+module RouteUrl.Builder exposing
+    ( Builder, builder
+    , entry, newEntry, modifyEntry
+    , path, modifyPath, prependToPath, appendToPath, replacePath
+    , query, modifyQuery, insertQuery, addQuery, removeQuery, getQuery, replaceQuery
+    , hash, modifyHash, replaceHash
+    , toUrlChange, toHashChange, fromUrl, fromHash
+    )
 
 {-| This module provides a type which you can use to help construct a
 `UrlChange` or parse a `Location`.
@@ -82,12 +63,13 @@ will be done for you.
 
 -}
 
-import RouteUrl exposing (HistoryEntry(..), UrlChange)
 import Dict exposing (Dict)
-import Http exposing (encodeUri, decodeUri)
-import Regex exposing (HowMany(..), replace, regex)
-import String
 import Erl
+import Http exposing (decodeUri, encodeUri)
+import Regex exposing (HowMany(..), regex, replace)
+import RouteUrl exposing (HistoryEntry(..), UrlChange)
+import String
+
 
 
 -- THE TYPE
@@ -186,7 +168,7 @@ prependToPath =
 -}
 appendToPath : List String -> Builder -> Builder
 appendToPath =
-    modifyPath << flip List.append
+    modifyPath << (\b a -> List.append a b)
 
 
 {-| Sets the path to the provided list.
@@ -232,12 +214,14 @@ insertQuery newKey newValue =
                                 -- If so, we just drop the old one ... the new
                                 -- one has already been inserted
                                 ( acc, replaced )
+
                             else
                                 -- If not, we insert the new one instead of the
                                 -- old one, and remember that we've done it.
                                 ( ( newKey, newValue ) :: acc
                                 , True
                                 )
+
                         else
                             -- If it's some other key, just pass it through
                             ( ( oldKey, oldValue ) :: acc
@@ -245,17 +229,19 @@ insertQuery newKey newValue =
                             )
                     )
                     ( [], False )
-                |> \( reversedList, replaced ) ->
-                    -- Since we did a `foldl`, and then a bunch of `::`, the list
-                    -- was reversed. So, check whether we still need to add our
-                    -- new key, and then un-reverse. (This helps us put the new
-                    -- key at the end, if it didn't exist before).
-                    if replaced then
-                        List.reverse reversedList
-                    else
-                        List.reverse <|
-                            ( newKey, newValue )
-                                :: reversedList
+                |> (\( reversedList, replaced ) ->
+                        -- Since we did a `foldl`, and then a bunch of `::`, the list
+                        -- was reversed. So, check whether we still need to add our
+                        -- new key, and then un-reverse. (This helps us put the new
+                        -- key at the end, if it didn't exist before).
+                        if replaced then
+                            List.reverse reversedList
+
+                        else
+                            List.reverse <|
+                                ( newKey, newValue )
+                                    :: reversedList
+                   )
         )
 
 
@@ -284,6 +270,7 @@ getQuery key (Builder builder) =
             (\( k, v ) ->
                 if k == key then
                     Just v
+
                 else
                     Nothing
             )
@@ -331,12 +318,14 @@ toChange stuffIntoHash (Builder builder) =
         prefix =
             if stuffIntoHash then
                 "#!/"
+
             else
                 "/"
 
         queryPrefix =
             if stuffIntoHash then
                 "^"
+
             else
                 "?"
 
@@ -346,6 +335,7 @@ toChange stuffIntoHash (Builder builder) =
         joinedQuery =
             if List.isEmpty builder.query then
                 ""
+
             else
                 queryPrefix ++ String.join "&" (List.map eachQuery builder.query)
 
@@ -355,18 +345,20 @@ toChange stuffIntoHash (Builder builder) =
         hashPrefix =
             if stuffIntoHash then
                 "$"
+
             else
                 "#"
 
         formattedHash =
             if builder.hash == "" then
                 ""
+
             else
                 hashPrefix ++ encodeUri builder.hash
     in
-        { entry = builder.entry
-        , url = prefix ++ joinedPath ++ joinedQuery ++ formattedHash
-        }
+    { entry = builder.entry
+    , url = prefix ++ joinedPath ++ joinedQuery ++ formattedHash
+    }
 
 
 {-| Once you've built up your URL, use this to convert it to a `UrlChange` for use with
@@ -397,14 +389,14 @@ fromUrl url =
         erl =
             Erl.parse url
     in
-        Builder
-            { entry = NewEntry
-            , path = erl.path
-            , query = erl.query
+    Builder
+        { entry = NewEntry
+        , path = erl.path
+        , query = erl.query
 
-            -- note that Erl.parse doesn't seem to decode the hash for you
-            , hash = Maybe.withDefault "" <| decodeUri erl.hash
-            }
+        -- note that Erl.parse doesn't seem to decode the hash for you
+        , hash = Maybe.withDefault "" <| decodeUri erl.hash
+        }
 
 
 {-| Constructs a `Builder` from the hash portion of a URL.
@@ -428,9 +420,9 @@ fromHash url =
                 |> replace (AtMost 1) (regex "\\^") (always "?")
                 |> Erl.parse
     in
-        Builder
-            { entry = NewEntry
-            , path = unwrapped.path
-            , query = unwrapped.query
-            , hash = unwrapped.hash
-            }
+    Builder
+        { entry = NewEntry
+        , path = unwrapped.path
+        , query = unwrapped.query
+        , hash = unwrapped.hash
+        }

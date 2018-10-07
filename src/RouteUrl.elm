@@ -1,26 +1,12 @@
-module RouteUrl
-    exposing
-        ( App
-        , AppWithFlags
-        , program
-        , programWithFlags
-        , UrlChange
-        , HistoryEntry(NewEntry, ModifyEntry)
-        , NavigationApp
-        , navigationApp
-        , runNavigationApp
-        , NavigationAppWithFlags
-        , navigationAppWithFlags
-        , runNavigationAppWithFlags
-        , WrappedModel
-        , unwrapModel
-        , mapModel
-        , WrappedMsg
-        , unwrapMsg
-        , wrapUserMsg
-        , wrapLocation
-        , RouteUrlProgram
-        )
+module RouteUrl exposing
+    ( App, AppWithFlags
+    , UrlChange, HistoryEntry(..)
+    , program, programWithFlags, RouteUrlProgram
+    , NavigationApp, navigationApp, runNavigationApp
+    , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
+    , WrappedModel, unwrapModel, mapModel
+    , WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
+    )
 
 {-| This module provides routing for single-page apps based on changes to the
 the browser's location. The routing happens in both directions
@@ -88,6 +74,7 @@ import String exposing (startsWith)
 import Update.Extra exposing (sequence)
 
 
+
 -- THINGS CLIENTS PROVIDE
 
 
@@ -115,7 +102,7 @@ So, the "special" fields are the `delta2url` function and the
     For instance, it might make the difference between using `NewEntry` or
     `ModifyEntry` to make the change.
 
-    Note that this function will *not* be called when processing messages
+    Note that this function will _not_ be called when processing messages
     returned from your `location2messages` function, since in that case the
     URL has already been set.
 
@@ -123,7 +110,7 @@ So, the "special" fields are the `delta2url` function and the
     detected, either because the user followed a link, typed something in the
     location bar, or used the back or forward buttons.
 
-    Note that this function will *not* be called when your `delta2url` method
+    Note that this function will _not_ be called when your `delta2url` method
     initiates a `UrlChange` -- since in that case, the relevant change in the
     model has already occurred.
 
@@ -217,7 +204,7 @@ must follow a couple of rules.
 
   - The `String` must already be uri-encoded.
 
-  - The `String` must either start with a '/', a `?' or a '#'.
+  - The `String` must either start with a '/', a \`?' or a '#'.
       - If it starts with a '/', it will be interpreted as a full path, including
         optional query parameters and hash.
 
@@ -228,7 +215,7 @@ must follow a couple of rules.
         path and query parameters (if any) to stay the same -- only the
         hash will change.
 
-So, what you should *not* provide is the scheme, host, or authentication
+So, what you should _not_ provide is the scheme, host, or authentication
 method -- that is, no "<http://elm-lang.org">. You should also not use relative
 URLs. (Let me know if you'd like relative URLs -- we might be able to do
 something sensible with them, but we don't yet in this version).
@@ -392,12 +379,12 @@ navigationApp app =
         common =
             app2Common app
     in
-        { locationToMessage = RouterMsg
-        , init = init app.init common
-        , update = update common
-        , view = view common
-        , subscriptions = subscriptions common
-        }
+    { locationToMessage = RouterMsg
+    , init = init app.init common
+    , update = update common
+    , view = view common
+    , subscriptions = subscriptions common
+    }
 
 
 {-| Given your configuration, this function does some wrapping and produces
@@ -414,12 +401,12 @@ navigationAppWithFlags app =
         common =
             appWithFlags2Common app
     in
-        { locationToMessage = RouterMsg
-        , init = initWithFlags app.init common
-        , update = update common
-        , view = view common
-        , subscriptions = subscriptions common
-        }
+    { locationToMessage = RouterMsg
+    , init = initWithFlags app.init common
+    , update = update common
+    , view = view common
+    , subscriptions = subscriptions common
+    }
 
 
 {-| Turns the output from [`navigationApp`](#navigationApp)
@@ -538,9 +525,9 @@ initWithFlags appInit app flags location =
             , reportedUrl = Erl.parse location.href
             }
     in
-        ( WrappedModel userModel routerModel
-        , Cmd.map UserMsg command
-        )
+    ( WrappedModel userModel routerModel
+    , Cmd.map UserMsg command
+    )
 
 
 {-| Call the provided init function with the user's part of the model
@@ -556,9 +543,9 @@ init appInit app location =
             , reportedUrl = Erl.parse location.href
             }
     in
-        ( WrappedModel userModel routerModel
-        , Cmd.map UserMsg command
-        )
+    ( WrappedModel userModel routerModel
+    , Cmd.map UserMsg command
+    )
 
 
 {-| Interprets the UrlChange as a Cmd
@@ -566,12 +553,13 @@ init appInit app location =
 urlChange2Cmd : UrlChange -> Cmd msg
 urlChange2Cmd change =
     change.url
-        |> case change.entry of
-            NewEntry ->
-                Navigation.newUrl
+        |> (case change.entry of
+                NewEntry ->
+                    Navigation.newUrl
 
-            ModifyEntry ->
-                Navigation.modifyUrl
+                ModifyEntry ->
+                    Navigation.modifyUrl
+           )
 
 
 mapUrl : (String -> String) -> UrlChange -> UrlChange
@@ -595,6 +583,7 @@ checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
 checkDistinctUrl old new =
     if eqUrl (Erl.parse new.url) old then
         Nothing
+
     else
         Just new
 
@@ -602,11 +591,13 @@ checkDistinctUrl old new =
 url2path : Url -> String
 url2path url =
     "/"
-        ++ (String.join "/" url.path)
-        ++ if url.hasTrailingSlash && not (List.isEmpty url.path) then
-            "/"
-           else
-            ""
+        ++ String.join "/" url.path
+        ++ (if url.hasTrailingSlash && not (List.isEmpty url.path) then
+                "/"
+
+            else
+                ""
+           )
 
 
 {-| Supplies the default path or query string, if needed
@@ -616,8 +607,10 @@ normalizeUrl old change =
     mapUrl
         (if startsWith "?" change.url then
             \url -> url2path old ++ url
+
          else if startsWith "#" change.url then
             \url -> url2path old ++ Erl.queryToString old ++ url
+
          else
             \url -> url
         )
@@ -641,29 +634,31 @@ update app msg (WrappedModel user router) =
                     , expectedUrlChanges =
                         if router.expectedUrlChanges > 0 then
                             router.expectedUrlChanges - 1
+
                         else
                             0
                     }
             in
-                if router.expectedUrlChanges > 0 then
-                    -- This is a Url change which we were expecting, because we did
-                    -- it in response to a change in the app's state.  So, we don't
-                    -- make any *further* change to the app's state here ... we
-                    -- just record that we've seen the Url change we expected.
-                    ( WrappedModel user newRouterModel
-                    , Cmd.none
-                    )
-                else
-                    -- This is an href which came from the outside ... i.e. clicking on a link,
-                    -- typing in the location bar, following a bookmark. So, we need to update
-                    -- the app's state to correspond to the new location.
-                    let
-                        ( newUserModel, commands ) =
-                            sequence app.update (app.location2messages location) ( user, Cmd.none )
-                    in
-                        ( WrappedModel newUserModel newRouterModel
-                        , Cmd.map UserMsg commands
-                        )
+            if router.expectedUrlChanges > 0 then
+                -- This is a Url change which we were expecting, because we did
+                -- it in response to a change in the app's state.  So, we don't
+                -- make any *further* change to the app's state here ... we
+                -- just record that we've seen the Url change we expected.
+                ( WrappedModel user newRouterModel
+                , Cmd.none
+                )
+
+            else
+                -- This is an href which came from the outside ... i.e. clicking on a link,
+                -- typing in the location bar, following a bookmark. So, we need to update
+                -- the app's state to correspond to the new location.
+                let
+                    ( newUserModel, commands ) =
+                        sequence app.update (app.location2messages location) ( user, Cmd.none )
+                in
+                ( WrappedModel newUserModel newRouterModel
+                , Cmd.map UserMsg commands
+                )
 
         UserMsg userMsg ->
             let
@@ -676,16 +671,16 @@ update app msg (WrappedModel user router) =
                         |> Maybe.map (normalizeUrl router.reportedUrl)
                         |> Maybe.andThen (checkDistinctUrl router.reportedUrl)
             in
-                case maybeUrlChange of
-                    Just urlChange ->
-                        ( WrappedModel newUserModel <|
-                            { reportedUrl = Erl.parse urlChange.url
-                            , expectedUrlChanges = router.expectedUrlChanges + 1
-                            }
-                        , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd urlChange, userCommand ]
-                        )
+            case maybeUrlChange of
+                Just urlChange ->
+                    ( WrappedModel newUserModel <|
+                        { reportedUrl = Erl.parse urlChange.url
+                        , expectedUrlChanges = router.expectedUrlChanges + 1
+                        }
+                    , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd urlChange, userCommand ]
+                    )
 
-                    Nothing ->
-                        ( WrappedModel newUserModel router
-                        , Cmd.map UserMsg userCommand
-                        )
+                Nothing ->
+                    ( WrappedModel newUserModel router
+                    , Cmd.map UserMsg userCommand
+                    )
