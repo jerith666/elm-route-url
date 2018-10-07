@@ -66,10 +66,12 @@ need them.
 
 -}
 
+import Browser.Navigation exposing (..)
 import Dict
 import Html exposing (Html)
 import String exposing (startsWith)
 import Update.Extra exposing (sequence)
+import Url exposing (..)
 
 
 
@@ -119,7 +121,7 @@ So, the "special" fields are the `delta2url` function and the
 -}
 type alias App model msg =
     { delta2url : model -> model -> Maybe UrlChange
-    , location2messages : Location -> List msg
+    , location2messages : Url -> List msg
     , init : ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
@@ -140,7 +142,7 @@ which are described above, under [`App`](#App).
 -}
 type alias AppWithFlags model msg flags =
     { delta2url : model -> model -> Maybe UrlChange
-    , location2messages : Location -> List msg
+    , location2messages : Url -> List msg
     , init : flags -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
@@ -153,7 +155,7 @@ you are actually intending to ignore the flags. It's a long story.
 -}
 type alias AppCommon model msg =
     { delta2url : model -> model -> Maybe UrlChange
-    , location2messages : Location -> List msg
+    , location2messages : Url -> List msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Html msg
@@ -283,7 +285,7 @@ mapModel mapper (WrappedModel user router) =
 internally by RouteUrl, and others are passed on to the application.
 -}
 type WrappedMsg user
-    = RouterMsg Location
+    = RouterMsg Url
     | UserMsg user
 
 
@@ -291,7 +293,7 @@ type WrappedMsg user
 that works on a `Location`, or apply a function that works on the msg type
 that your program uses.
 -}
-unwrapMsg : (Location -> a) -> (user -> a) -> WrappedMsg user -> a
+unwrapMsg : (Url -> a) -> (user -> a) -> WrappedMsg user -> a
 unwrapMsg handleLocation handleUserMsg wrapped =
     case wrapped of
         RouterMsg location ->
@@ -314,7 +316,7 @@ wrapUserMsg =
 I'm not sure you'll ever need this ... perhaps for testing?
 
 -}
-wrapLocation : Location -> WrappedMsg user
+wrapLocation : Url -> WrappedMsg user
 wrapLocation =
     RouterMsg
 
@@ -335,8 +337,8 @@ of its functions.
 
 -}
 type alias NavigationApp model msg =
-    { locationToMessage : Location -> msg
-    , init : Location -> ( model, Cmd msg )
+    { locationToMessage : Url -> msg
+    , init : Url -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , view : model -> Html msg
     , subscriptions : model -> Sub msg
@@ -355,8 +357,8 @@ of its functions.
 
 -}
 type alias NavigationAppWithFlags model msg flags =
-    { locationToMessage : Location -> msg
-    , init : flags -> Location -> ( model, Cmd msg )
+    { locationToMessage : Url -> msg
+    , init : flags -> Url -> ( model, Cmd msg )
     , update : msg -> model -> ( model, Cmd msg )
     , view : model -> Html msg
     , subscriptions : model -> Sub msg
@@ -511,7 +513,7 @@ subscriptions app (WrappedModel model _) =
 
 {-| Call the provided init function with the user's part of the model
 -}
-initWithFlags : (flags -> ( model, Cmd msg )) -> AppCommon model msg -> flags -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+initWithFlags : (flags -> ( model, Cmd msg )) -> AppCommon model msg -> flags -> Url -> ( WrappedModel model, Cmd (WrappedMsg msg) )
 initWithFlags appInit app flags location =
     let
         ( userModel, command ) =
@@ -520,7 +522,7 @@ initWithFlags appInit app flags location =
 
         routerModel =
             { expectedUrlChanges = 0
-            , reportedUrl = Erl.parse location.href
+            , reportedUrl = location
             }
     in
     ( WrappedModel userModel routerModel
@@ -530,7 +532,7 @@ initWithFlags appInit app flags location =
 
 {-| Call the provided init function with the user's part of the model
 -}
-init : ( model, Cmd msg ) -> AppCommon model msg -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+init : ( model, Cmd msg ) -> AppCommon model msg -> Url -> ( WrappedModel model, Cmd (WrappedMsg msg) )
 init appInit app location =
     let
         ( userModel, command ) =
@@ -538,7 +540,7 @@ init appInit app location =
 
         routerModel =
             { expectedUrlChanges = 0
-            , reportedUrl = Erl.parse location.href
+            , reportedUrl = location
             }
     in
     ( WrappedModel userModel routerModel
@@ -553,10 +555,10 @@ urlChange2Cmd change =
     change.url
         |> (case change.entry of
                 NewEntry ->
-                    Navigation.newUrl
+                    pushUrl
 
                 ModifyEntry ->
-                    Navigation.modifyUrl
+                    replaceUrl
            )
 
 
@@ -579,7 +581,7 @@ eqUrl u1 u2 =
 
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
 checkDistinctUrl old new =
-    if eqUrl (Erl.parse new.url) old then
+    if eqUrl (fromString new.url) old then
         Nothing
 
     else
@@ -607,7 +609,7 @@ normalizeUrl old change =
             \url -> url2path old ++ url
 
          else if startsWith "#" change.url then
-            \url -> url2path old ++ Erl.queryToString old ++ url
+            \url -> url2path old ++ old.query ++ url
 
          else
             \url -> url
@@ -628,7 +630,7 @@ update app msg (WrappedModel user router) =
                 -- ourselves). So, we remove the current href from the expectations.
                 newRouterModel =
                     { reportedUrl =
-                        Erl.parse location.href
+                        location
                     , expectedUrlChanges =
                         if router.expectedUrlChanges > 0 then
                             router.expectedUrlChanges - 1
@@ -672,7 +674,7 @@ update app msg (WrappedModel user router) =
             case maybeUrlChange of
                 Just urlChange ->
                     ( WrappedModel newUserModel <|
-                        { reportedUrl = Erl.parse urlChange.url
+                        { reportedUrl = fromString urlChange.url
                         , expectedUrlChanges = router.expectedUrlChanges + 1
                         }
                     , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd urlChange, userCommand ]
