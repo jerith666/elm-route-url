@@ -372,6 +372,7 @@ runNavigationAppWithFlags app =
         { init = app.init
         , update = app.update
         , view = app.view
+        , onUrlChange = app.locationToMessage
         , subscriptions = app.subscriptions
         }
 
