@@ -494,21 +494,9 @@ mapUrl func c1 =
     { c1 | url = func c1.url }
 
 
-{-| Whether one Url is equal to another, for our purposes (that is, just comparing
-the things we care about).
--}
-eqUrl : Url -> Url -> Bool
-eqUrl u1 u2 =
-    -- The queries are `List (String, String)`, so `==` should be OK
-    (u1.path == u2.path)
-        && (u1.hasTrailingSlash == u2.hasTrailingSlash)
-        && (u1.hash == u2.hash)
-        && (u1.query == u2.query)
-
-
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
 checkDistinctUrl old new =
-    if eqUrl (fromString new.url) old then
+    if fromString new.url == old then
         Nothing
 
     else
