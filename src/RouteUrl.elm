@@ -367,7 +367,7 @@ to do with the `NavigationApp` structure before turning it into a `Program`.
 -}
 runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags model msg
 runNavigationAppWithFlags app =
-    Browser.application app.locationToMessage
+    Browser.application
         { init = app.init
         , update = app.update
         , view = app.view
