@@ -215,6 +215,7 @@ One way to construct a `UrlChange` in a modular way is to use the
 type alias UrlChange =
     { entry : HistoryEntry
     , url : String
+    , key : Key
     }
 
 
@@ -480,10 +481,10 @@ urlChange2Cmd change =
     change.url
         |> (case change.entry of
                 NewEntry ->
-                    pushUrl
+                    pushUrl change.key
 
                 ModifyEntry ->
-                    replaceUrl
+                    replaceUrl change.key
            )
 
 
