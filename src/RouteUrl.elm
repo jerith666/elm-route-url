@@ -508,28 +508,16 @@ checkDistinctUrl old new =
             Just new
 
 
-url2path : Url -> String
-url2path url =
-    "/"
-        ++ String.join "/" url.path
-        ++ (if url.hasTrailingSlash && not (List.isEmpty url.path) then
-                "/"
-
-            else
-                ""
-           )
-
-
 {-| Supplies the default path or query string, if needed
 -}
 normalizeUrl : Url -> UrlChange -> UrlChange
 normalizeUrl old change =
     mapUrl
         (if startsWith "?" change.url then
-            \url -> url2path old ++ url
+            \url -> old.path ++ url
 
          else if startsWith "#" change.url then
-            \url -> url2path old ++ Maybe.withDefault "" old.query ++ url
+            \url -> old.path ++ Maybe.withDefault "" old.query ++ url
 
          else
             \url -> url
