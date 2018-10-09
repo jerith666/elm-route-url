@@ -215,9 +215,23 @@ One way to construct a `UrlChange` in a modular way is to use the
 `RouteUrl.Builder` module. However, a variety of approaches are possible.
 
 -}
-type alias UrlChange =
+type UrlChange
+    = NewPath
+        UrlChangeMetadata
+        { path : String
+        , query : Maybe String
+        , fragment : Maybe String
+        }
+    | NewQuery
+        UrlChangeMetadata
+        { query : String
+        , fragment : Maybe String
+        }
+    | NewFragment UrlChangeMetadata String
+
+
+type alias UrlChangeMetadata =
     { entry : HistoryEntry
-    , url : String
     , key : Key
     }
 
@@ -486,54 +500,70 @@ init appInit app location =
     )
 
 
+getMetadata : UrlChange -> UrlChangeMetadata
+getMetadata urlChange =
+    case urlChange of
+        NewPath urlChangeMetadata _ ->
+            urlChangeMetadata
+
+        NewQuery urlChangeMetadata _ ->
+            urlChangeMetadata
+
+        NewFragment urlChangeMetadata _ ->
+            urlChangeMetadata
+
+
+apply : Url -> UrlChange -> Url
+apply url change =
+    case change of
+        NewPath _ c ->
+            { url
+                | path = c.path
+                , query = c.query
+                , fragment = c.fragment
+            }
+
+        NewQuery _ c ->
+            { url
+                | query = Just c.query
+                , fragment = c.fragment
+            }
+
+        NewFragment _ c ->
+            { url | fragment = Just c }
+
+
 {-| Interprets the UrlChange as a Cmd
 -}
-urlChange2Cmd : UrlChange -> Cmd msg
-urlChange2Cmd change =
-    change.url
-        |> (case change.entry of
+urlChange2Cmd : Url -> UrlChange -> Cmd msg
+urlChange2Cmd oldUrl change =
+    let
+        metadata =
+            getMetadata change
+    in
+    apply oldUrl change
+        |> toString
+        |> (case metadata.entry of
                 NewEntry ->
-                    pushUrl change.key
+                    pushUrl metadata.key
 
                 ModifyEntry ->
-                    replaceUrl change.key
+                    replaceUrl metadata.key
            )
-
-
-mapUrl : (String -> String) -> UrlChange -> UrlChange
-mapUrl func c1 =
-    { c1 | url = func c1.url }
 
 
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
 checkDistinctUrl old new =
-    case fromString new.url of
-        Just newu ->
-            if newu == old then
-                Nothing
+    let
+        newUrl =
+            apply old new
+    in
+    case old == newUrl of
+        True ->
+            Nothing
 
-            else
-                Just new
-
-        Nothing ->
+        False ->
             Just new
-
-
-{-| Supplies the default path or query string, if needed
--}
-normalizeUrl : Url -> UrlChange -> UrlChange
-normalizeUrl old change =
-    mapUrl
-        (if startsWith "?" change.url then
-            \url -> old.path ++ url
-
-         else if startsWith "#" change.url then
-            \url -> old.path ++ Maybe.withDefault "" old.query ++ url
-
-         else
-            \url -> url
-        )
-        change
 
 
 {-| This is the normal `update` function we're providing to `Navigation`.
@@ -587,16 +617,15 @@ update app msg (WrappedModel user router) =
 
                 maybeUrlChange =
                     app.delta2url user newUserModel
-                        |> Maybe.map (normalizeUrl router.reportedUrl)
                         |> Maybe.andThen (checkDistinctUrl router.reportedUrl)
             in
             case maybeUrlChange of
                 Just urlChange ->
                     ( WrappedModel newUserModel <|
-                        { reportedUrl = fromString urlChange.url
+                        { reportedUrl = apply router.reportedUrl urlChange
                         , expectedUrlChanges = router.expectedUrlChanges + 1
                         }
-                    , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd urlChange, userCommand ]
+                    , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd router.reportedUrl urlChange, userCommand ]
                     )
 
                 Nothing ->
