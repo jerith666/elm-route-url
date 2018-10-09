@@ -145,6 +145,7 @@ type alias AppWithFlags model msg flags =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Document msg
+    , onUrlRequest : UrlRequest -> msg
     }
 
 
@@ -157,6 +158,7 @@ type alias AppCommon model msg =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Document msg
+    , onUrlRequest : UrlRequest -> msg
     }
 
 
@@ -167,6 +169,7 @@ appWithFlags2Common app =
     , update = app.update
     , subscriptions = app.subscriptions
     , view = app.view
+    , onUrlRequest = app.onUrlRequest
     }
 
 
@@ -331,6 +334,7 @@ type alias NavigationAppWithFlags model msg flags =
     , update : msg -> model -> ( model, Cmd msg )
     , view : model -> Document msg
     , subscriptions : model -> Sub msg
+    , onUrlRequest : UrlRequest -> msg
     }
 
 
@@ -353,6 +357,7 @@ navigationAppWithFlags app =
     , update = update common
     , view = view common
     , subscriptions = subscriptions common
+    , onUrlRequest = onUrlRequest common
     }
 
 
@@ -373,6 +378,7 @@ runNavigationAppWithFlags app =
         , update = app.update
         , view = app.view
         , onUrlChange = app.locationToMessage
+        , onUrlRequest = app.onUrlRequest
         , subscriptions = app.subscriptions
         }
 
@@ -436,6 +442,11 @@ subscriptions : AppCommon model msg -> WrappedModel model -> Sub (WrappedMsg msg
 subscriptions app (WrappedModel model _) =
     app.subscriptions model
         |> Sub.map UserMsg
+
+
+onUrlRequest : AppCommon model msg -> UrlRequest -> WrappedMsg msg
+onUrlRequest app req =
+    app.onUrlRequest req |> UserMsg
 
 
 {-| Call the provided init function with the user's part of the model
