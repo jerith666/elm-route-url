@@ -1,6 +1,6 @@
 module RouteUrl exposing
     ( AppWithFlags
-    , UrlChange, HistoryEntry(..)
+    , UrlChange(..), HistoryEntry(..)
     , programWithFlags, RouteUrlProgram
     , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
     , WrappedModel, unwrapModel, mapModel
