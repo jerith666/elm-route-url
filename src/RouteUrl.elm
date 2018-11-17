@@ -28,7 +28,7 @@ You configure this module by providing the functions set out in [`App`](#App) or
 [`AppWithFlags`](#AppWithFlags), depending on what kind of `init` function you
 want to use.
 
-@docs App, AppWithFlags
+@docs AppWithFlags
 
 
 # URL Changes
@@ -49,7 +49,7 @@ The simplest way to use this module is to do something like this:
     create your `main` function, instead of their homonymous equivalents in
     [`Html`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html).
 
-@docs program, programWithFlags, RouteUrlProgram
+@docs programWithFlags, RouteUrlProgram
 
 
 # More complex initialization
