@@ -3,7 +3,7 @@
     "name": "rgrempel/elm-route-url",
     "summary": "Router for single-page-apps in Elm",
     "license": "MIT",
-    "version": "4.0.0",
+    "version": "5.0.0",
     "exposed-modules": [
         "RouteUrl"
     ],
