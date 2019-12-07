@@ -195,10 +195,6 @@ update action model =
 -- VIEW
 
 
-(=>) =
-    \a b -> ( a, b )
-
-
 view : Model -> Html Action
 view model =
     let
