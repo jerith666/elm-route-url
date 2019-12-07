@@ -2,6 +2,8 @@ module ExampleViewer exposing (..)
 
 -- Note that I'm renaming these locally for simplicity.
 
+import Browser exposing (Document, UrlRequest)
+import Browser.Navigation exposing (Key)
 import Example1.Counter as Example1
 import Example2.CounterPair as Example2
 import Example3.CounterList as Example3
@@ -61,13 +63,14 @@ type alias Model =
 
     -- And, we need to track which example we're actually showing
     , currentExample : Example
+    , key : Key
     }
 
 
 {-| Now, to init our model, we have to collect each examples init
 -}
-init : ( Model, Cmd Action )
-init =
+init : () -> Key -> ( Model, Cmd Action )
+init _ key =
     let
         model =
             { example1 = Example1.init
@@ -79,6 +82,7 @@ init =
             , example7 = Tuple.first Example7.init
             , example8 = Tuple.first Example8.init
             , currentExample = Example1
+            , key = key
             }
 
         effects =
@@ -119,6 +123,7 @@ type Action
     | Example7Action Example7.Action
     | Example8Action Example8.Action
     | ShowExample Example
+    | UrlRequested UrlRequest
     | NoOp
 
 
@@ -189,13 +194,19 @@ update action model =
             , Cmd.map Example8Action <| Tuple.second result
             )
 
+        UrlRequested url ->
+            (model, Cmd.none)
 
 
 -- VIEW
 
 
-view : Model -> Html Action
+view : Model -> Document Action
 view model =
+    { title = "Example", body = [ viewImpl model ] }
+
+viewImpl : Model -> Html Action
+viewImpl model =
     let
         viewExample =
             case model.currentExample of
@@ -227,13 +238,13 @@ view model =
             let
                 styleList =
                     if example == model.currentExample then
-                        [ "font-weight" => "bold"
+                        [ style "font-weight" "bold"
                         ]
 
                     else
-                        [ "font-weight" => "normal"
-                        , "color" => "blue"
-                        , "cursor" => "pointer"
+                        [ style "font-weight" "normal"
+                        , style "color" "blue"
+                        , style "cursor" "pointer"
                         ]
 
                 -- Note that we compose the full title out of some information the
@@ -242,7 +253,7 @@ view model =
                 fullTitle =
                     text <|
                         "Example "
-                            ++ toString index
+                            ++ String.fromInt index
                             ++ ": "
                             ++ title
 
@@ -254,7 +265,7 @@ view model =
                     else
                         [ onClick (ShowExample example) ]
             in
-            p (style styleList :: clickAction)
+            p (styleList ++ clickAction)
                 [ fullTitle ]
 
         toc =
@@ -273,18 +284,18 @@ view model =
     table []
         [ tr []
             [ td
-                [ (\( a, b ) -> style a b) ("vertical-align" => "top")
-                , (\( a, b ) -> style a b) ("width" => "25%")
-                , (\( a, b ) -> style a b) ("padding" => "8px")
-                , (\( a, b ) -> style a b) ("margin" => "8px")
+                [ style "vertical-align"  "top"
+                , style "width"  "25%"
+                , style "padding"  "8px"
+                , style "margin"  "8px"
                 ]
                 [ toc ]
             , td
-                [ (\( a, b ) -> style a b) ("vertical-align" => "top")
-                , (\( a, b ) -> style a b) ("width" => "75%")
-                , (\( a, b ) -> style a b) ("padding" => "8px")
-                , (\( a, b ) -> style a b) ("margin" => "8px")
-                , (\( a, b ) -> style a b) ("border" => "1px dotted black")
+                [ style "vertical-align"  "top"
+                , style "width"  "75%"
+                , style "padding"  "8px"
+                , style "margin"  "8px"
+                , style "border"  "1px dotted black"
                 ]
                 [ viewExample ]
             ]
@@ -303,7 +314,7 @@ delta2url previous current =
     -- have to do that ... you can construct a `UrlChange` however you like.
     --
     -- So, as the last step, we map our possible `Builder` to a `UrlChange`.
-        delta2builder previous current
+        Maybe.map (addKey current.key) <| delta2builder previous current
 
 
 {-| An example of the new API, if just using the hash
@@ -312,8 +323,19 @@ delta2hash : Model -> Model -> Maybe UrlChange
 delta2hash previous current =
     -- TODO Here, we're re-using the Builder-oriented code, but stuffing everything
     -- into the hash (rather than actually using the full URL).
-        delta2builder previous current
+        Maybe.map (addKey current.key) <| delta2builder previous current
 
+addKey : Key -> KeylessUrlChange -> UrlChange
+addKey k kuc =
+    case kuc of
+        KeylessUrlChange.NewPath h d ->
+            RouteUrl.NewPath {entry = h, key = k} d
+
+        KeylessUrlChange.NewQuery h d ->
+            RouteUrl.NewQuery {entry = h, key = k} d
+
+        KeylessUrlChange.NewFragment h d ->
+            RouteUrl.NewFragment {entry = h, key = k} d
 
 {-| This is the common code that we rely on above. Again, you don't have to use
 a `Builder` if you don't want to ... it's just one way to construct a `UrlChange`.
