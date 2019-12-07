@@ -89,11 +89,14 @@ delta2fragment previous current =
 
 {-| We'll just take a string
 -}
-fragment2messages : String -> List Action
-fragment2messages fragment =
-    case toInt fragment of
+fragment2messages : Maybe String -> List Action
+fragment2messages mFragment =
+    case mFragment of
+     Just fragment ->
+      case toInt fragment of
         Just value ->
             [ Set value ]
 
         Nothing ->
             []
+     Nothing -> []

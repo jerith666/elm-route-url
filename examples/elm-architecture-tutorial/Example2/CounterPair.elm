@@ -8,6 +8,8 @@ import KeylessUrlChange exposing (KeylessUrlChange(..))
 import RouteUrl exposing (HistoryEntry(..))
 import Url exposing (Url)
 import Url.Builder exposing (relative, string)
+import Url.Parser exposing (parse, query)
+import Url.Parser.Query exposing (map2)
 
 
 
@@ -96,14 +98,11 @@ delta2builder previous current =
 builder2messages : Url -> List Action
 builder2messages url =
     let
-        left =
-            getQuery "top" builder
-                |> List.concatMap Counter.fragment2messages
-                |> List.map Top
-
-        right =
-            getQuery "bottom" builder
-                |> List.concatMap Counter.fragment2messages
-                |> List.map Bottom
+        parseQuery =
+            query <| map2 List.append
+              (Url.Parser.Query.map ((List.map Top) << Counter.fragment2messages) <| Url.Parser.Query.string "top")
+              (Url.Parser.Query.map ((List.map Bottom) << Counter.fragment2messages) <| Url.Parser.Query.string "bottom")
     in
-    List.append left right
+    case parse parseQuery url of
+        Nothing -> []
+        Just actions -> actions
