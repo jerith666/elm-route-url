@@ -1,9 +1,12 @@
 module Example1.Counter exposing (..)
 
+import ExampleViewer exposing (KeylessUrlChange(..))
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import RouteUrl exposing (HistoryEntry(..))
 import String exposing (toInt)
+import Url exposing (Url)
 
 
 
@@ -84,22 +87,20 @@ title =
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
-    builder
-        |> replacePath [ toString current ]
-        |> Just
+    Just <| NewPath NewEntry <| { path = String.fromInt current, query = Nothing, fragment = Nothing }
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
-    case path builder of
+builder2messages : Url -> List Action
+builder2messages url =
+    case String.split "/" url.path of
         first :: rest ->
             case toInt first of
-                Ok value ->
+                Just value ->
                     [ Set value ]
 
-                Err _ ->
+                Nothing ->
                     -- If it wasn't an integer, then no action ... we could
                     -- show an error instead, of course.
                     []

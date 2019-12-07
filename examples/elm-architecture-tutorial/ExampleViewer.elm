@@ -13,7 +13,8 @@ import Example8.SpinSquarePair as Example8
 import Html exposing (Html, div, map, p, table, td, text, tr)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import RouteUrl exposing (UrlChange)
+import RouteUrl exposing (HistoryEntry, UrlChange)
+import Url exposing (Url)
 
 
 
@@ -293,6 +294,20 @@ view model =
 -- ROUTING
 --
 
+type KeylessUrlChange
+    = NewPath
+        HistoryEntry
+        { path : String
+        , query : Maybe String
+        , fragment : Maybe String
+        }
+    | NewQuery
+        HistoryEntry
+        { query : String
+        , fragment : Maybe String
+        }
+    | NewFragment HistoryEntry String
+
 
 {-| This is an example of the new API, if using the whole URL
 -}
@@ -302,7 +317,6 @@ delta2url previous current =
     -- have to do that ... you can construct a `UrlChange` however you like.
     --
     -- So, as the last step, we map our possible `Builder` to a `UrlChange`.
-    Maybe.map Builder.toUrlChange <|
         delta2builder previous current
 
 
@@ -310,90 +324,92 @@ delta2url previous current =
 -}
 delta2hash : Model -> Model -> Maybe UrlChange
 delta2hash previous current =
-    -- Here, we're re-using the Builder-oriented code, but stuffing everything
+    -- TODO Here, we're re-using the Builder-oriented code, but stuffing everything
     -- into the hash (rather than actually using the full URL).
-    Maybe.map Builder.toHashChange <|
         delta2builder previous current
 
 
 {-| This is the common code that we rely on above. Again, you don't have to use
 a `Builder` if you don't want to ... it's just one way to construct a `UrlChange`.
 -}
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
     case current.currentExample of
         Example1 ->
             -- First, we ask the submodule for a `Maybe Builder`. Then, we use
             -- `map` to prepend something to the path.
             Example1.delta2builder previous.example1 current.example1
-                |> Maybe.map (Builder.prependToPath [ "example-1" ])
+                |> Maybe.map (prependToPath [ "example-1" ])
 
         Example2 ->
             Example2.delta2builder previous.example2 current.example2
-                |> Maybe.map (Builder.prependToPath [ "example-2" ])
+                |> Maybe.map (prependToPath [ "example-2" ])
 
         Example3 ->
             Example3.delta2builder previous.example3 current.example3
-                |> Maybe.map (Builder.prependToPath [ "example-3" ])
+                |> Maybe.map (prependToPath [ "example-3" ])
 
         Example4 ->
             Example4.delta2builder previous.example4 current.example4
-                |> Maybe.map (Builder.prependToPath [ "example-4" ])
+                |> Maybe.map (prependToPath [ "example-4" ])
 
         Example5 ->
             Example5.delta2builder previous.example5 current.example5
-                |> Maybe.map (Builder.prependToPath [ "example-5" ])
+                |> Maybe.map (prependToPath [ "example-5" ])
 
         Example6 ->
             Example6.delta2builder previous.example6 current.example6
-                |> Maybe.map (Builder.prependToPath [ "example-6" ])
+                |> Maybe.map (prependToPath [ "example-6" ])
 
         Example7 ->
             Example7.delta2builder previous.example7 current.example7
-                |> Maybe.map (Builder.prependToPath [ "example-7" ])
+                |> Maybe.map (prependToPath [ "example-7" ])
 
         Example8 ->
             Example8.delta2builder previous.example8 current.example8
-                |> Maybe.map (Builder.prependToPath [ "example-8" ])
+                |> Maybe.map (prependToPath [ "example-8" ])
 
+prependToPath : List String -> KeylessUrlChange -> KeylessUrlChange
+prependToPath path u =
+    u
 
 {-| This is an example of a `location2messages` function ... I'm calling it
 `url2messages` to illustrate something that uses the full URL.
 -}
-url2messages : Location -> List Action
+url2messages : Url -> List Action
 url2messages location =
     -- You can parse the `Location` in whatever way you want. I'm making
     -- a `Builder` and working from that, but I'm sure that's not the
     -- best way. There are links to a number of proper parsing packages
     -- in the README.
-    builder2messages (Builder.fromUrl location.href)
+    builder2messages location -- (Builder.fromUrl location.href)
 
 
 {-| This is an example of a `location2messages` function ... I'm calling it
 `hash2messages` to illustrate something that uses just the hash.
 -}
-hash2messages : Location -> List Action
+hash2messages : Url -> List Action
 hash2messages location =
     -- You can parse the `Location` in whatever way you want. I'm making
     -- a `Builder` and working from that, but I'm sure that's not the
     -- best way. There are links to a number of proper parsing packages
     -- in the README.
-    builder2messages (Builder.fromHash location.href)
+    builder2messages location -- (Builder.fromHash location.href)
 
 
 {-| Another example of a `location2messages` function, this time only using the hash.
 -}
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     -- You can parse the `Location` in whatever way you want ... there are a
     -- number of parsing packages listed in the README. Here, I'm constructing
     -- a `Builder` and working from that, but that's probably not the best
     -- thing to do.
-    case Builder.path builder of
+    case String.split "/" url.path of
         first :: rest ->
             let
                 subBuilder =
-                    Builder.replacePath rest builder
+                    { url | path = String.concat <| List.intersperse "/" rest }
             in
             case first of
                 "example-1" ->
