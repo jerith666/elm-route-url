@@ -5,8 +5,6 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Json
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, appendToPath, builder)
 import Task
 
 
@@ -176,21 +174,6 @@ decodeUrl =
 
 
 -- Routing
-
-
-{-| We'll generate URLs like "/gifUrl". Note that this treats the topic as an
-invariant, which it is here ... it can only be supplied on initialization.
-If it weren't invariant, we'd need to do something more complex.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    if current.gifUrl == "assets/waiting.gif" then
-        -- If we're waiting for the first random gif, don't generate an entry ...
-        -- wait for the gif to arrive.
-        Nothing
-
-    else
-        Just (RouteHash.set [ current.gifUrl ])
 
 
 delta2builder : Model -> Model -> Maybe Builder

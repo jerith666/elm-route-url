@@ -13,7 +13,6 @@ module Example2.Counter exposing
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import RouteHash exposing (HashUpdate)
 import String exposing (toInt)
 
 
@@ -78,37 +77,6 @@ countStyle =
         , ( "width", "50px" )
         , ( "text-align", "center" )
         ]
-
-
-
--- Routing (Old API)
-
-
-{-| For delta2update, we provide our state as the value for the URL
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    Just <|
-        RouteHash.set [ toString current ]
-
-
-{-| For location2action, we generate an action that will restore our state
--}
-location2action : List String -> List Action
-location2action list =
-    case list of
-        first :: rest ->
-            case toInt first of
-                Ok value ->
-                    [ Set value ]
-
-                Err _ ->
-                    -- If it wasn't an integer, then no action
-                    []
-
-        _ ->
-            -- If nothing provided for this part of the URL, return empty list
-            []
 
 
 

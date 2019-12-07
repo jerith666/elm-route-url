@@ -5,8 +5,6 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
 
 
 
@@ -183,53 +181,6 @@ if you prefer that.
 title : String
 title =
     "List of Random Gifs"
-
-
-
--- Routing (Old API)
-
-
-{-| We record each thing in the gifList. Note that we don't track the ID's,
-since in this app there isn't any need to preserve them ... of course, we
-could track them if it mattered.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    current.gifList
-        |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
-        |> List.concat
-        |> RouteHash.set
-        |> Just
-
-
-location2action : List String -> List Action
-location2action list =
-    [ Set <|
-        List.map
-            (\( topic, url ) ->
-                if url == "" then
-                    ( topic, Nothing )
-
-                else
-                    ( topic, Just url )
-            )
-            (inTwos list)
-    ]
-
-
-inTwos : List a -> List ( a, a )
-inTwos list =
-    let
-        step sublist result =
-            case sublist of
-                a :: b :: rest ->
-                    step rest (( a, b ) :: result)
-
-                _ ->
-                    result
-    in
-    List.reverse <|
-        step list []
 
 
 

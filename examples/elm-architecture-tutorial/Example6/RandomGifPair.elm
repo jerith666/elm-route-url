@@ -3,8 +3,6 @@ module Example6.RandomGifPair exposing (..)
 import Example6.RandomGif as RandomGif
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, appendToPath, path)
 
 
 
@@ -94,51 +92,6 @@ if you prefer that.
 title : String
 title =
     "Pair of Random Gifs"
-
-
-
--- Routing (Old API)
-
-
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    let
-        left =
-            Maybe.map RouteHash.extract <|
-                RandomGif.delta2update previous.left current.left
-
-        right =
-            Maybe.map RouteHash.extract <|
-                RandomGif.delta2update previous.right current.right
-    in
-    -- Essentially, we want to combine left and right. I should think about
-    -- how to improve the API for this. We can simplify in this case because
-    -- we happen to know that both sides will be lists of length 1. If the
-    -- lengths could vary, we'd have to do something more complex.
-    left
-        |> Maybe.andThen
-            (\l ->
-                right
-                    |> Maybe.andThen
-                        (\r -> Just (l ++ r))
-            )
-        |> Maybe.map RouteHash.set
-
-
-location2action : List String -> List Action
-location2action list =
-    -- This is simplified because we know that each sub-module will supply a
-    -- list with one element ... otherwise, we'd have to do something more
-    -- complex.
-    case list of
-        left :: right :: rest ->
-            List.concat
-                [ List.map Left <| RandomGif.location2action [ left ]
-                , List.map Right <| RandomGif.location2action [ right ]
-                ]
-
-        _ ->
-            []
 
 
 

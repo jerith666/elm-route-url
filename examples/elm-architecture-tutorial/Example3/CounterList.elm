@@ -5,8 +5,6 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Result.Extra
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
 import String
 
 
@@ -121,40 +119,6 @@ the construction.
 title : String
 title =
     "List of Counters"
-
-
-
--- Routing (Old API)
-
-
-{-| You could do this in a variety of ways. We'll ignore the ID's, and just
-encode the value of each Counter in the list -- so we'll end up with
-something like /0/1/5 or whatever. When we recreate that, we won't
-necessarily have the same IDs, but that doesn't matter for this example.
-If it mattered, we'd have to do this a different way.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    -- We'll take advantage of the fact that we know that the counter
-    -- is just an Int ... no need to be super-modular here.
-    List.map (toString << Tuple.second) current.counters
-        |> RouteHash.set
-        |> Just
-
-
-location2action : List String -> List Action
-location2action list =
-    let
-        result =
-            List.map String.toInt list
-                |> Result.Extra.combine
-    in
-    case result of
-        Ok ints ->
-            [ Set ints ]
-
-        Err _ ->
-            []
 
 
 

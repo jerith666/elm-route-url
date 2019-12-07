@@ -3,7 +3,6 @@ module Example8.SpinSquare exposing (Action, Model, delta2update, init, location
 import AnimationFrame
 import Ease exposing (outBounce)
 import Html exposing (Html)
-import RouteHash exposing (HashUpdate)
 import String
 import Svg exposing (g, rect, svg, text, text_)
 import Svg.Attributes exposing (..)
