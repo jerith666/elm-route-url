@@ -5,6 +5,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
+import KeylessUrlChange exposing (KeylessUrlChange(..))
+import RouteUrl exposing (HistoryEntry(..))
+import Url exposing (Url)
 
 
 
@@ -116,24 +119,19 @@ update message model =
 -- VIEW
 
 
-(=>) =
-    \a b -> ( a, b )
-
-
 view : Model -> Html Action
 view model =
     div []
         [ input
-            [ placeholder "What kind of gifs do you want?"
+            ( [ placeholder "What kind of gifs do you want?"
             , value model.topic
             , onEnter Create
             , onInput Topic
-            , inputStyle
-            ]
+            ] ++ inputStyle )
             []
         , div
-            [ (\( a, b ) -> style a b) ("display" => "flex")
-            , (\( a, b ) -> style a b) ("flex-wrap" => "wrap")
+            [ style "display" "flex"
+            , style "flex-wrap" "wrap"
             ]
             (List.map elementView model.gifList)
         ]
@@ -144,14 +142,13 @@ elementView ( id, model ) =
     Html.map (SubMsg id) (RandomGif.view model)
 
 
-inputStyle : Attribute any
+inputStyle : List (Attribute any)
 inputStyle =
-    style
-        [ ( "width", "100%" )
-        , ( "height", "40px" )
-        , ( "padding", "10px 0" )
-        , ( "font-size", "2em" )
-        , ( "text-align", "center" )
+        [ style "width" "100%"
+        , style "height" "40px"
+        , style "padding" "10px 0"
+        , style "font-size" "2em"
+        , style "text-align" "center"
         ]
 
 
@@ -187,7 +184,7 @@ title =
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
     let
         path =
@@ -195,21 +192,35 @@ delta2builder previous current =
                 |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
                 |> List.concat
     in
-    builder
-        |> replacePath path
+    NewPath NewEntry
+        {path = String.concat <| List.intersperse "/" path, query = Nothing, fragment = Nothing}
         |> Just
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     [ Set <|
         List.map
-            (\( topic, url ) ->
-                if url == "" then
+            (\( topic, u ) ->
+                if u == "" then
                     ( topic, Nothing )
 
                 else
-                    ( topic, Just url )
+                    ( topic, Just u )
             )
-            (inTwos (path builder))
+            (inTwos (String.split "/" url.path))
     ]
+
+inTwos : List a -> List ( a, a )
+inTwos list =
+    let
+        step sublist result =
+            case sublist of
+                a :: b :: rest ->
+                    step rest (( a, b ) :: result)
+
+                _ ->
+                    result
+    in
+    List.reverse <|
+        step list []
