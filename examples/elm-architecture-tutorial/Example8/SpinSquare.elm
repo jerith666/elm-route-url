@@ -1,14 +1,15 @@
-module Example8.SpinSquare exposing (Model, Action, init, update, view, delta2update, location2action, subscriptions)
+module Example8.SpinSquare exposing (Action, Model, delta2update, init, location2action, subscriptions, update, view)
 
+import AnimationFrame
 import Ease exposing (outBounce)
 import Html exposing (Html)
-import Svg exposing (svg, rect, g, text, text_)
+import RouteHash exposing (HashUpdate)
+import String
+import Svg exposing (g, rect, svg, text, text_)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
 import Time exposing (Time, second)
-import RouteHash exposing (HashUpdate)
-import AnimationFrame
-import String
+
 
 
 -- MODEL
@@ -93,22 +94,23 @@ update msg model =
                         newElapsedTime =
                             animation.elapsedTime + diff
                     in
-                        if newElapsedTime > duration then
-                            -- The animation is finished, so actually update the
-                            -- model by changing the angle.
-                            ( { angle = model.angle + animation.step
-                              , animationState = Nothing
-                              }
-                            , Cmd.none
-                            )
-                        else
-                            -- We're still animating, so update the time and let
-                            -- the view take care of drawing.
-                            ( { angle = model.angle
-                              , animationState = Just { animation | elapsedTime = newElapsedTime }
-                              }
-                            , Cmd.none
-                            )
+                    if newElapsedTime > duration then
+                        -- The animation is finished, so actually update the
+                        -- model by changing the angle.
+                        ( { angle = model.angle + animation.step
+                          , animationState = Nothing
+                          }
+                        , Cmd.none
+                        )
+
+                    else
+                        -- We're still animating, so update the time and let
+                        -- the view take care of drawing.
+                        ( { angle = model.angle
+                          , animationState = Just { animation | elapsedTime = newElapsedTime }
+                          }
+                        , Cmd.none
+                        )
 
         SetAngle angle ->
             ( { model
@@ -133,7 +135,7 @@ toOffset animationState =
             0
 
         Just animation ->
-            (outBounce (animation.elapsedTime / duration)) * animation.step
+            outBounce (animation.elapsedTime / duration) * animation.step
 
 
 view : Model -> Html Action
@@ -142,25 +144,25 @@ view model =
         angle =
             model.angle + toOffset model.animationState
     in
-        svg
-            [ width "200", height "200", viewBox "0 0 200 200" ]
-            [ g
-                [ transform ("translate(100, 100) rotate(" ++ toString angle ++ ")")
-                , onClick Spin
-                ]
-                [ rect
-                    [ x "-50"
-                    , y "-50"
-                    , width "100"
-                    , height "100"
-                    , rx "15"
-                    , ry "15"
-                    , style "fill: #60B5CC;"
-                    ]
-                    []
-                , text_ [ fill "white", textAnchor "middle" ] [ text "Click me!" ]
-                ]
+    svg
+        [ width "200", height "200", viewBox "0 0 200 200" ]
+        [ g
+            [ transform ("translate(100, 100) rotate(" ++ toString angle ++ ")")
+            , onClick Spin
             ]
+            [ rect
+                [ x "-50"
+                , y "-50"
+                , width "100"
+                , height "100"
+                , rx "15"
+                , ry "15"
+                , style "fill: #60B5CC;"
+                ]
+                []
+            , text_ [ fill "white", textAnchor "middle" ] [ text "Click me!" ]
+            ]
+        ]
 
 
 
@@ -176,6 +178,7 @@ delta2update current =
     if current.animationState == Nothing then
         Just <|
             toString current.angle
+
     else
         Nothing
 

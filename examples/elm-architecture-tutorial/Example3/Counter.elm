@@ -1,8 +1,9 @@
-module Example3.Counter exposing (Model, init, Action, update, view)
+module Example3.Counter exposing (Action, Model, init, update, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+
 
 
 -- MODEL

@@ -5,7 +5,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, insertQuery, getQuery)
+import RouteUrl.Builder exposing (Builder, builder, getQuery, insertQuery)
+
 
 
 -- MODEL
@@ -138,4 +139,4 @@ builder2messages builder =
                 |> List.concatMap Counter.fragment2messages
                 |> List.map Bottom
     in
-        List.append left right
+    List.append left right

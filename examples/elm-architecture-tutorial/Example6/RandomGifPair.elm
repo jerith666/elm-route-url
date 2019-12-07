@@ -1,10 +1,11 @@
 module Example6.RandomGifPair exposing (..)
 
+import Example6.RandomGif as RandomGif
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, path, appendToPath)
-import Example6.RandomGif as RandomGif
+import RouteUrl.Builder exposing (Builder, appendToPath, path)
+
 
 
 -- MODEL
@@ -33,12 +34,12 @@ init =
         ( right, rightFx ) =
             RandomGif.init rightTopic
     in
-        ( Model left right
-        , Cmd.batch
-            [ Cmd.map Left leftFx
-            , Cmd.map Right rightFx
-            ]
-        )
+    ( Model left right
+    , Cmd.batch
+        [ Cmd.map Left leftFx
+        , Cmd.map Right rightFx
+        ]
+    )
 
 
 
@@ -58,18 +59,18 @@ update action model =
                 ( left, fx ) =
                     RandomGif.update act model.left
             in
-                ( Model left model.right
-                , Cmd.map Left fx
-                )
+            ( Model left model.right
+            , Cmd.map Left fx
+            )
 
         Right act ->
             let
                 ( right, fx ) =
                     RandomGif.update act model.right
             in
-                ( Model model.left right
-                , Cmd.map Right fx
-                )
+            ( Model model.left right
+            , Cmd.map Right fx
+            )
 
 
 
@@ -78,7 +79,7 @@ update action model =
 
 view : Model -> Html Action
 view model =
-    div [ style [ ( "display", "flex" ) ] ]
+    div [ style "display" "flex" ]
         [ Html.map Left (RandomGif.view model.left)
         , Html.map Right (RandomGif.view model.right)
         ]
@@ -110,18 +111,18 @@ delta2update previous current =
             Maybe.map RouteHash.extract <|
                 RandomGif.delta2update previous.right current.right
     in
-        -- Essentially, we want to combine left and right. I should think about
-        -- how to improve the API for this. We can simplify in this case because
-        -- we happen to know that both sides will be lists of length 1. If the
-        -- lengths could vary, we'd have to do something more complex.
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r -> Just (l ++ r))
-                )
-            |> Maybe.map RouteHash.set
+    -- Essentially, we want to combine left and right. I should think about
+    -- how to improve the API for this. We can simplify in this case because
+    -- we happen to know that both sides will be lists of length 1. If the
+    -- lengths could vary, we'd have to do something more complex.
+    left
+        |> Maybe.andThen
+            (\l ->
+                right
+                    |> Maybe.andThen
+                        (\r -> Just (l ++ r))
+            )
+        |> Maybe.map RouteHash.set
 
 
 location2action : List String -> List Action
@@ -153,16 +154,16 @@ delta2builder previous current =
         right =
             RandomGif.delta2builder previous.right current.right
     in
-        -- Essentially, we want to combine left and right.
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r ->
-                                Just <| appendToPath (path r) l
-                            )
-                )
+    -- Essentially, we want to combine left and right.
+    left
+        |> Maybe.andThen
+            (\l ->
+                right
+                    |> Maybe.andThen
+                        (\r ->
+                            Just <| appendToPath (path r) l
+                        )
+            )
 
 
 builder2messages : Builder -> List Action

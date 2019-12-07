@@ -1,21 +1,21 @@
-module Example2.Counter
-    exposing
-        ( Model
-        , init
-        , Action
-        , update
-        , view
-        , delta2update
-        , location2action
-        , delta2fragment
-        , fragment2messages
-        )
+module Example2.Counter exposing
+    ( Action
+    , Model
+    , delta2fragment
+    , delta2update
+    , fragment2messages
+    , init
+    , location2action
+    , update
+    , view
+    )
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import RouteHash exposing (HashUpdate)
 import String exposing (toInt)
+
 
 
 -- MODEL

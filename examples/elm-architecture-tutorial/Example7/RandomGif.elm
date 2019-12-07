@@ -8,6 +8,7 @@ import Json.Decode as Json
 import Task
 
 
+
 -- MODEL
 
 
@@ -30,6 +31,7 @@ init topic gifUrl =
     ( Model topic gifUrl
     , if gifUrl == Nothing then
         getRandomGif topic
+
       else
         Cmd.none
     )
@@ -65,12 +67,12 @@ update action model =
 
 
 (=>) =
-    (,)
+    \a b -> ( a, b )
 
 
 view : Model -> Html Action
 view model =
-    div [ style [ "width" => "200px" ] ]
+    div [ (\( a, b ) -> style a b) ("width" => "200px") ]
         [ h2 [ headerStyle ] [ text model.topic ]
         , div [ imgStyle (Maybe.withDefault "assets/waiting.gif" model.gifUrl) ] []
         , button [ onClick RequestMore ] [ text "More Please!" ]
@@ -150,8 +152,9 @@ case a little.
 encodeLocation : Model -> Maybe (List String)
 encodeLocation model =
     -- Don't encode if there's no gifUrl
-    if (model.gifUrl == Nothing) then
+    if model.gifUrl == Nothing then
         Nothing
+
     else
         Just
             [ model.topic

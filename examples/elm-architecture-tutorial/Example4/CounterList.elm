@@ -4,10 +4,11 @@ import Example4.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Result.Extra
 import RouteHash exposing (HashUpdate)
 import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
-import Result.Extra
 import String
+
 
 
 -- MODEL
@@ -62,10 +63,11 @@ update action model =
                 updateCounter ( counterID, counterModel ) =
                     if counterID == id then
                         ( counterID, Counter.update counterAction counterModel )
+
                     else
                         ( counterID, counterModel )
             in
-                { model | counters = List.map updateCounter model.counters }
+            { model | counters = List.map updateCounter model.counters }
 
         Set list ->
             let
@@ -76,9 +78,9 @@ update action model =
                         )
                         list
             in
-                { counters = counters
-                , nextID = List.length counters
-                }
+            { counters = counters
+            , nextID = List.length counters
+            }
 
 
 
@@ -91,7 +93,7 @@ view model =
         insert =
             button [ onClick Insert ] [ text "Add" ]
     in
-        div [] (insert :: List.map viewCounter model.counters)
+    div [] (insert :: List.map viewCounter model.counters)
 
 
 viewCounter : ( ID, Counter.Model ) -> Html Action
@@ -100,7 +102,7 @@ viewCounter ( id, model ) =
         context =
             Counter.Context (Modify id) (Remove id)
     in
-        Counter.viewWithRemoveButton context model
+    Counter.viewWithRemoveButton context model
 
 
 {-| We add a separate function to get a title, which the ExampleViewer uses to
@@ -140,12 +142,12 @@ location2action list =
             List.map String.toInt list
                 |> Result.Extra.combine
     in
-        case result of
-            Ok ints ->
-                [ Set ints ]
+    case result of
+        Ok ints ->
+            [ Set ints ]
 
-            Err _ ->
-                []
+        Err _ ->
+            []
 
 
 
@@ -169,9 +171,9 @@ builder2messages builder =
                 |> List.map String.toInt
                 |> Result.Extra.combine
     in
-        case result of
-            Ok ints ->
-                [ Set ints ]
+    case result of
+        Ok ints ->
+            [ Set ints ]
 
-            Err _ ->
-                []
+        Err _ ->
+            []

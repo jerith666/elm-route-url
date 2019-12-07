@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import ExampleViewer exposing (Model, Action)
+import ExampleViewer exposing (Action, Model)
 import RouteHash
 import RouteUrl exposing (RouteUrlProgram)
 

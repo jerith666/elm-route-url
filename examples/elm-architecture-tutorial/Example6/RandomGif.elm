@@ -5,9 +5,10 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Json
-import Task
 import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, appendToPath)
+import RouteUrl.Builder exposing (Builder, appendToPath, builder)
+import Task
+
 
 
 -- MODEL
@@ -98,12 +99,12 @@ update action model =
 
 
 (=>) =
-    (,)
+    \a b -> ( a, b )
 
 
 view : Model -> Html Action
 view model =
-    div [ style [ "width" => "200px" ] ]
+    div [ (\( a, b ) -> style a b) ("width" => "200px") ]
         [ h2 [ headerStyle ] [ text model.topic ]
         , div [ imgStyle model.gifUrl ] []
         , button [ onClick RequestMore ] [ text "More Please!" ]
@@ -187,6 +188,7 @@ delta2update previous current =
         -- If we're waiting for the first random gif, don't generate an entry ...
         -- wait for the gif to arrive.
         Nothing
+
     else
         Just (RouteHash.set [ current.gifUrl ])
 
@@ -197,6 +199,7 @@ delta2builder previous current =
         -- If we're waiting for the first random gif, don't generate an entry ...
         -- wait for the gif to arrive.
         Nothing
+
     else
         builder
             |> appendToPath [ current.gifUrl ]

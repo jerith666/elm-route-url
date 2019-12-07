@@ -1,12 +1,13 @@
 module Example7.RandomGifList exposing (..)
 
+import Example7.RandomGif as RandomGif
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
 import RouteHash exposing (HashUpdate)
 import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
-import Example7.RandomGif as RandomGif
+
 
 
 -- MODEL
@@ -56,9 +57,9 @@ update message model =
                 newModel =
                     Model "" (model.gifList ++ [ ( model.uid, newRandomGif ) ]) (model.uid + 1)
             in
-                ( newModel
-                , Cmd.map (SubMsg model.uid) fx
-                )
+            ( newModel
+            , Cmd.map (SubMsg model.uid) fx
+            )
 
         SubMsg msgId msg ->
             let
@@ -68,9 +69,10 @@ update message model =
                             ( newRandomGif, fx ) =
                                 RandomGif.update msg randomGif
                         in
-                            ( ( id, newRandomGif )
-                            , Cmd.map (SubMsg id) fx
-                            )
+                        ( ( id, newRandomGif )
+                        , Cmd.map (SubMsg id) fx
+                        )
+
                     else
                         ( entry, Cmd.none )
 
@@ -79,9 +81,9 @@ update message model =
                         |> List.map subUpdate
                         |> List.unzip
             in
-                ( { model | gifList = newGifList }
-                , Cmd.batch fxList
-                )
+            ( { model | gifList = newGifList }
+            , Cmd.batch fxList
+            )
 
         Set list ->
             let
@@ -104,12 +106,12 @@ update message model =
                 ( models, effects ) =
                     List.unzip modelsAndEffects
             in
-                ( { model
-                    | gifList = models
-                    , uid = List.length models
-                  }
-                , Cmd.batch effects
-                )
+            ( { model
+                | gifList = models
+                , uid = List.length models
+              }
+            , Cmd.batch effects
+            )
 
 
 
@@ -117,7 +119,7 @@ update message model =
 
 
 (=>) =
-    (,)
+    \a b -> ( a, b )
 
 
 view : Model -> Html Action
@@ -132,10 +134,8 @@ view model =
             ]
             []
         , div
-            [ style
-                [ "display" => "flex"
-                , "flex-wrap" => "wrap"
-                ]
+            [ (\( a, b ) -> style a b) ("display" => "flex")
+            , (\( a, b ) -> style a b) ("flex-wrap" => "wrap")
             ]
             (List.map elementView model.gifList)
         ]
@@ -169,6 +169,7 @@ is13 : Int -> Json.Decoder ()
 is13 code =
     if code == 13 then
         Json.succeed ()
+
     else
         Json.fail "not the right key code"
 
@@ -208,6 +209,7 @@ location2action list =
             (\( topic, url ) ->
                 if url == "" then
                     ( topic, Nothing )
+
                 else
                     ( topic, Just url )
             )
@@ -226,8 +228,8 @@ inTwos list =
                 _ ->
                     result
     in
-        List.reverse <|
-            step list []
+    List.reverse <|
+        step list []
 
 
 
@@ -242,9 +244,9 @@ delta2builder previous current =
                 |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
                 |> List.concat
     in
-        builder
-            |> replacePath path
-            |> Just
+    builder
+        |> replacePath path
+        |> Just
 
 
 builder2messages : Builder -> List Action
@@ -254,6 +256,7 @@ builder2messages builder =
             (\( topic, url ) ->
                 if url == "" then
                     ( topic, Nothing )
+
                 else
                     ( topic, Just url )
             )

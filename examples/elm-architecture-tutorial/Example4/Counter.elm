@@ -1,8 +1,9 @@
-module Example4.Counter exposing (Model, init, Action, update, view, viewWithRemoveButton, Context)
+module Example4.Counter exposing (Action, Context, Model, init, update, view, viewWithRemoveButton)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+
 
 
 -- MODEL

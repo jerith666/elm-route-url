@@ -1,10 +1,11 @@
 module Example8.SpinSquarePair exposing (..)
 
+import Example8.SpinSquare as SpinSquare
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Example8.SpinSquare as SpinSquare
 import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder as Builder exposing (Builder, builder, insertQuery, getQuery)
+import RouteUrl.Builder as Builder exposing (Builder, builder, getQuery, insertQuery)
+
 
 
 -- MODEL
@@ -25,12 +26,12 @@ init =
         ( right, rightFx ) =
             SpinSquare.init
     in
-        ( Model left right
-        , Cmd.batch
-            [ Cmd.map Left leftFx
-            , Cmd.map Right rightFx
-            ]
-        )
+    ( Model left right
+    , Cmd.batch
+        [ Cmd.map Left leftFx
+        , Cmd.map Right rightFx
+        ]
+    )
 
 
 
@@ -58,18 +59,18 @@ update action model =
                 ( left, fx ) =
                     SpinSquare.update act model.left
             in
-                ( Model left model.right
-                , Cmd.map Left fx
-                )
+            ( Model left model.right
+            , Cmd.map Left fx
+            )
 
         Right act ->
             let
                 ( right, fx ) =
                     SpinSquare.update act model.right
             in
-                ( Model model.left right
-                , Cmd.map Right fx
-                )
+            ( Model model.left right
+            , Cmd.map Right fx
+            )
 
 
 
@@ -77,12 +78,12 @@ update action model =
 
 
 (=>) =
-    (,)
+    \a b -> ( a, b )
 
 
 view : Model -> Html Action
 view model =
-    div [ style [ "display" => "flex" ] ]
+    div [ (\( a, b ) -> style a b) ("display" => "flex") ]
         [ Html.map Left (SpinSquare.view model.left)
         , Html.map Right (SpinSquare.view model.right)
         ]
@@ -113,16 +114,16 @@ delta2update previous current =
         right =
             SpinSquare.delta2update current.right
     in
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r ->
-                                Just <|
-                                    RouteHash.set [ l, r ]
-                            )
-                )
+    left
+        |> Maybe.andThen
+            (\l ->
+                right
+                    |> Maybe.andThen
+                        (\r ->
+                            Just <|
+                                RouteHash.set [ l, r ]
+                        )
+            )
 
 
 location2action : List String -> List Action
@@ -153,20 +154,20 @@ delta2builder previous current =
         right =
             SpinSquare.delta2update current.right
     in
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r ->
-                                -- Since we can, why not use the query parameters?
-                                Just
-                                    (builder
-                                        |> insertQuery "left" l
-                                        |> insertQuery "right" r
-                                    )
-                            )
-                )
+    left
+        |> Maybe.andThen
+            (\l ->
+                right
+                    |> Maybe.andThen
+                        (\r ->
+                            -- Since we can, why not use the query parameters?
+                            Just
+                                (builder
+                                    |> insertQuery "left" l
+                                    |> insertQuery "right" r
+                                )
+                        )
+            )
 
 
 builder2messages : Builder -> List Action
@@ -182,4 +183,4 @@ builder2messages builder =
             getQuery "right" builder
                 |> List.filterMap (Maybe.map Right << SpinSquare.location2action)
     in
-        List.append left right
+    List.append left right
