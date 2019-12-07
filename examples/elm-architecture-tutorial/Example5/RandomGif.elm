@@ -3,9 +3,12 @@ module Example5.RandomGif exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Http
+import Http exposing (expectJson)
 import Json.Decode as Json
+import KeylessUrlChange exposing (KeylessUrlChange(..))
+import RouteUrl exposing (HistoryEntry(..))
 import Task
+import Url exposing (Url)
 
 
 
@@ -147,13 +150,12 @@ queryPair ( key, value ) =
 
 queryEscape : String -> String
 queryEscape string =
-    String.join "+" (String.split "%20" (Http.encodeUri string))
+    String.join "+" (String.split "%20" (Url.percentEncode string))
 
 
 getRandomGif : String -> Cmd Action
 getRandomGif topic =
-    Http.send NewGif <|
-        Http.get (randomUrl topic) decodeUrl
+        Http.get {url = (randomUrl topic), expect = expectJson NewGif decodeUrl}
 
 
 randomUrl : String -> String
@@ -184,7 +186,7 @@ title =
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
     if current.gifUrl == (Tuple.first init).gifUrl then
         -- If we're waiting for the first random gif, don't generate an entry ...
@@ -192,14 +194,14 @@ delta2builder previous current =
         Nothing
 
     else
-        builder
-            |> replacePath [ current.gifUrl ]
+        NewPath NewEntry
+            { path = current.gifUrl, query = Nothing, fragment = Nothing }
             |> Just
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
-    case path builder of
+builder2messages : Url -> List Action
+builder2messages url =
+    case String.split "/" url.path of
         -- If we have a gifUrl, then use it
         gifUrl :: rest ->
             [ NewGifFromLocation gifUrl ]
