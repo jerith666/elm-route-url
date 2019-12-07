@@ -3,6 +3,9 @@ module Example6.RandomGifPair exposing (..)
 import Example6.RandomGif as RandomGif
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import KeylessUrlChange exposing (KeylessUrlChange(..))
+import RouteUrl exposing (HistoryEntry(..))
+import Url exposing (Url)
 
 
 
@@ -98,7 +101,7 @@ title =
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
     let
         left =
@@ -114,17 +117,17 @@ delta2builder previous current =
                 right
                     |> Maybe.andThen
                         (\r ->
-                            Just <| appendToPath (path r) l
+                            Just <| NewPath NewEntry {path = l ++ "/" ++ r, query = Nothing, fragment = Nothing}
                         )
             )
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     -- This is simplified because we know that each sub-module will supply a
     -- list with one element ... otherwise, we'd have to do something more
     -- complex.
-    case path builder of
+    case String.split "/" url.path of
         left :: right :: rest ->
             List.concat
                 [ List.map Left <| RandomGif.location2action [ left ]
