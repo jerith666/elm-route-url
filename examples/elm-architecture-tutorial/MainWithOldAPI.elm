@@ -1,4 +1,4 @@
-module Main exposing (..)
+module MainWithOldAPI exposing (..)
 
 import ExampleViewer exposing (Action, Model)
 import RouteHash

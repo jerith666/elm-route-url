@@ -1,4 +1,4 @@
-module Main exposing (..)
+module MainWithJustHash exposing (..)
 
 import ExampleViewer exposing (Action, Model)
 import RouteUrl exposing (RouteUrlProgram)
