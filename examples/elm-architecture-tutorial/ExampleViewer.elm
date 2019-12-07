@@ -13,9 +13,7 @@ import Example8.SpinSquarePair as Example8
 import Html exposing (Html, div, map, p, table, td, text, tr)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Navigation exposing (Location)
 import RouteUrl exposing (UrlChange)
-import RouteUrl.Builder as Builder exposing (Builder)
 
 
 
