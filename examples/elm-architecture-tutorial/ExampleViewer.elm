@@ -14,7 +14,6 @@ import Html exposing (Html, div, map, p, table, td, text, tr)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Navigation exposing (Location)
-import RouteHash exposing (HashUpdate)
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder)
 
@@ -295,100 +294,6 @@ view model =
 
 -- ROUTING
 --
--- I've include demo code here for the old API, as well as the new API
--- using the full URL or just using the hash. Just to be completely clear,
--- you don't need all of these in practice ... you just pick one!
---
---------------------
--- Old RouteHash API
---------------------
-
-
-{-| If you have existing code using elm-route-hash, your `delta2update` function
-should not require any changes.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    case current.currentExample of
-        Example1 ->
-            -- First, we ask the submodule for a HashUpdate. Then, we use
-            -- `map` to prepend something to the URL.
-            RouteHash.map ((::) "example-1") <|
-                Example1.delta2update previous.example1 current.example1
-
-        Example2 ->
-            RouteHash.map ((::) "example-2") <|
-                Example2.delta2update previous.example2 current.example2
-
-        Example3 ->
-            RouteHash.map ((::) "example-3") <|
-                Example3.delta2update previous.example3 current.example3
-
-        Example4 ->
-            RouteHash.map ((::) "example-4") <|
-                Example4.delta2update previous.example4 current.example4
-
-        Example5 ->
-            RouteHash.map ((::) "example-5") <|
-                Example5.delta2update previous.example5 current.example5
-
-        Example6 ->
-            RouteHash.map ((::) "example-6") <|
-                Example6.delta2update previous.example6 current.example6
-
-        Example7 ->
-            RouteHash.map ((::) "example-7") <|
-                Example7.delta2update previous.example7 current.example7
-
-        Example8 ->
-            RouteHash.map ((::) "example-8") <|
-                Example8.delta2update previous.example8 current.example8
-
-
-{-| Here, we basically do the reverse of what delta2update does. If you
-have existing code using elm-route-hash, your `location2action` function
-should not require any changes.
--}
-location2action : List String -> List Action
-location2action list =
-    case list of
-        "example-1" :: rest ->
-            -- We give the Example1 module a chance to interpret the rest of
-            -- the URL, and then we prepend an action for the part we
-            -- interpreted.
-            ShowExample Example1 :: List.map Example1Action (Example1.location2action rest)
-
-        "example-2" :: rest ->
-            ShowExample Example2 :: List.map Example2Action (Example2.location2action rest)
-
-        "example-3" :: rest ->
-            ShowExample Example3 :: List.map Example3Action (Example3.location2action rest)
-
-        "example-4" :: rest ->
-            ShowExample Example4 :: List.map Example4Action (Example4.location2action rest)
-
-        "example-5" :: rest ->
-            ShowExample Example5 :: List.map Example5Action (Example5.location2action rest)
-
-        "example-6" :: rest ->
-            ShowExample Example6 :: List.map Example6Action (Example6.location2action rest)
-
-        "example-7" :: rest ->
-            ShowExample Example7 :: List.map Example7Action (Example7.location2action rest)
-
-        "example-8" :: rest ->
-            ShowExample Example8 :: List.map Example8Action (Example8.location2action rest)
-
-        _ ->
-            -- Normally, you'd want to show an error of some kind here.
-            -- But, for the moment, I'll just default to example1
-            [ ShowExample Example1 ]
-
-
-
--------------------
--- New RouteUrl API
--------------------
 
 
 {-| This is an example of the new API, if using the whole URL
