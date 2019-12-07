@@ -4,8 +4,11 @@ import Example3.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Result.Extra
+import KeylessUrlChange exposing (KeylessUrlChange(..))
+import Maybe.Extra
+import RouteUrl exposing (HistoryEntry(..))
 import String
+import Url exposing (Url)
 
 
 
@@ -125,26 +128,27 @@ title =
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
     -- We'll take advantage of the fact that we know that the counter
     -- is just an Int ... no need to be super-modular here.
-    builder
-        |> replacePath (List.map (toString << Tuple.second) current.counters)
-        |> Just
+    Just <| NewPath NewEntry
+        { path = String.concat <| List.intersperse "/" <| List.map (String.fromInt << Tuple.second) current.counters,
+          query = Nothing, fragment = Nothing }
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     let
         result =
-            path builder
+            url.path
+                |> String.split "/"
                 |> List.map String.toInt
-                |> Result.Extra.combine
+                |> Maybe.Extra.combine
     in
     case result of
-        Ok ints ->
+        Just ints ->
             [ Set ints ]
 
-        Err _ ->
+        Nothing ->
             []
