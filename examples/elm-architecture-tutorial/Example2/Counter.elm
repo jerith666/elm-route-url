@@ -2,10 +2,8 @@ module Example2.Counter exposing
     ( Action
     , Model
     , delta2fragment
-    , delta2update
     , fragment2messages
     , init
-    , location2action
     , update
     , view
     )
@@ -63,19 +61,18 @@ view : Model -> Html Action
 view model =
     div []
         [ button [ onClick Decrement ] [ text "-" ]
-        , div [ countStyle ] [ text (toString model) ]
+        , div countStyle [ text (String.fromInt model) ]
         , button [ onClick Increment ] [ text "+" ]
         ]
 
 
-countStyle : Attribute any
+countStyle : List (Attribute any)
 countStyle =
-    style
-        [ ( "font-size", "20px" )
-        , ( "font-family", "monospace" )
-        , ( "display", "inline-block" )
-        , ( "width", "50px" )
-        , ( "text-align", "center" )
+        [ style "font-size" "20px"
+        , style "font-family" "monospace"
+        , style "display" "inline-block"
+        , style "width" "50px"
+        , style "text-align" "center"
         ]
 
 
@@ -87,7 +84,7 @@ countStyle =
 -}
 delta2fragment : Model -> Model -> String
 delta2fragment previous current =
-    toString current
+    String.fromInt current
 
 
 {-| We'll just take a string
@@ -95,8 +92,8 @@ delta2fragment previous current =
 fragment2messages : String -> List Action
 fragment2messages fragment =
     case toInt fragment of
-        Ok value ->
+        Just value ->
             [ Set value ]
 
-        Err _ ->
+        Nothing ->
             []

@@ -4,6 +4,10 @@ import Example2.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import KeylessUrlChange exposing (KeylessUrlChange(..))
+import RouteUrl exposing (HistoryEntry(..))
+import Url exposing (Url)
+import Url.Builder exposing (relative, string)
 
 
 
@@ -81,16 +85,16 @@ title =
 
 {-| We'll put the two counters in the query parameters, just for fun
 -}
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
-    builder
-        |> insertQuery "top" (Counter.delta2fragment previous.topCounter current.topCounter)
-        |> insertQuery "bottom" (Counter.delta2fragment previous.bottomCounter current.bottomCounter)
-        |> Just
+    Just <| NewQuery NewEntry <|
+    { query = (relative [] [string "top" (Counter.delta2fragment previous.topCounter current.topCounter),
+        string "bottom" (Counter.delta2fragment previous.bottomCounter current.bottomCounter)]),
+        fragment = Nothing}
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     let
         left =
             getQuery "top" builder
