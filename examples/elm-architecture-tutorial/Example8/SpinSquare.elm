@@ -1,13 +1,13 @@
 module Example8.SpinSquare exposing (Action, Model, delta2update, init, location2action, subscriptions, update, view)
 
-import AnimationFrame
+import Browser.Events exposing (onAnimationFrameDelta)
 import Ease exposing (outBounce)
 import Html exposing (Html)
 import String
 import Svg exposing (g, rect, svg, text, text_)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
-import Time exposing (Time, second)
+import Time exposing (Posix, millisToPosix, posixToMillis)
 
 
 
@@ -21,7 +21,7 @@ type alias Model =
 
 
 type alias AnimationState =
-    { elapsedTime : Time
+    { elapsedTime : Float
     , step : Float
     }
 
@@ -38,7 +38,7 @@ rotateStep =
 
 
 duration =
-    second
+    60 * 1000
 
 
 
@@ -49,7 +49,7 @@ duration =
 -}
 type Action
     = Spin
-    | Tick Time
+    | Tick Float
     | SetAngle Float
 
 
@@ -57,7 +57,7 @@ subscriptions : Model -> Sub Action
 subscriptions model =
     case model.animationState of
         Just _ ->
-            AnimationFrame.diffs Tick
+            onAnimationFrameDelta Tick
 
         Nothing ->
             Sub.none
@@ -146,7 +146,7 @@ view model =
     svg
         [ width "200", height "200", viewBox "0 0 200 200" ]
         [ g
-            [ transform ("translate(100, 100) rotate(" ++ toString angle ++ ")")
+            [ transform ("translate(100, 100) rotate(" ++ String.fromFloat angle ++ ")")
             , onClick Spin
             ]
             [ rect
@@ -176,14 +176,13 @@ delta2update current =
     -- we don't want to set the history for every animation step
     if current.animationState == Nothing then
         Just <|
-            toString current.angle
+            String.fromFloat current.angle
 
     else
         Nothing
 
 
-location2action : String -> Maybe Action
+location2action : Maybe String -> Maybe Action
 location2action location =
     Maybe.map SetAngle <|
-        Result.toMaybe <|
-            String.toFloat location
+            Maybe.andThen String.toFloat location

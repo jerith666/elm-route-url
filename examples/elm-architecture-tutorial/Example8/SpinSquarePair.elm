@@ -3,6 +3,13 @@ module Example8.SpinSquarePair exposing (..)
 import Example8.SpinSquare as SpinSquare
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import KeylessUrlChange exposing (KeylessUrlChange(..))
+import Maybe.Extra
+import RouteUrl exposing (HistoryEntry(..))
+import Url exposing (Url)
+import Url.Builder exposing (relative, string)
+import Url.Parser exposing (parse, query)
+import Url.Parser.Query exposing (map2)
 
 
 
@@ -75,13 +82,9 @@ update action model =
 -- VIEW
 
 
-(=>) =
-    \a b -> ( a, b )
-
-
 view : Model -> Html Action
 view model =
-    div [ (\( a, b ) -> style a b) ("display" => "flex") ]
+    div [ style "display" "flex" ]
         [ Html.map Left (SpinSquare.view model.left)
         , Html.map Right (SpinSquare.view model.right)
         ]
@@ -103,7 +106,7 @@ title =
 -- New `RouteUrl` API
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe KeylessUrlChange
 delta2builder previous current =
     let
         left : Maybe String
@@ -121,26 +124,22 @@ delta2builder previous current =
                     |> Maybe.andThen
                         (\r ->
                             -- Since we can, why not use the query parameters?
-                            Just
-                                (builder
-                                    |> insertQuery "left" l
-                                    |> insertQuery "right" r
-                                )
+                            Just <|
+                                NewQuery NewEntry { query = relative [] [string "left" l, string "right" r], fragment = Nothing}
                         )
             )
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     -- Remember that you can parse as you like ... this is just
     -- an example, and there are better ways.
     let
-        left =
-            getQuery "left" builder
-                |> List.filterMap (Maybe.map Left << SpinSquare.location2action)
-
-        right =
-            getQuery "right" builder
-                |> List.filterMap (Maybe.map Right << SpinSquare.location2action)
+        parseQuery =
+            query <| map2 List.append
+              (Url.Parser.Query.map ((List.map Left) << Maybe.Extra.toList << SpinSquare.location2action) <| Url.Parser.Query.string "left")
+              (Url.Parser.Query.map ((List.map Right) << Maybe.Extra.toList << SpinSquare.location2action) <| Url.Parser.Query.string "right")
     in
-    List.append left right
+    case parse parseQuery url of
+        Nothing -> []
+        Just actions -> actions
