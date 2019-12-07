@@ -1,9 +1,9 @@
 module Example1.Counter exposing (..)
 
-import ExampleViewer exposing (KeylessUrlChange(..))
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import KeylessUrlChange exposing (KeylessUrlChange)
 import RouteUrl exposing (HistoryEntry(..))
 import String exposing (toInt)
 import Url exposing (Url)
