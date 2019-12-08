@@ -5,6 +5,7 @@ module RouteUrl exposing
     , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
     , WrappedModel, unwrapModel, mapModel
     , WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
+    , anchorManagedAppWithFlags, anchorManagedProgramWithFlags, runAnchorManagedAppWithFlags
     )
 
 {-| This module provides routing for single-page apps based on changes to the
@@ -137,7 +138,6 @@ type alias AppCommon model msg =
     , location2messages : Url -> List msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
-    , view : model -> Document msg
     , onUrlRequest : UrlRequest -> msg
     }
 
@@ -148,7 +148,6 @@ appWithFlags2Common app =
     , location2messages = app.location2messages
     , update = app.update
     , subscriptions = app.subscriptions
-    , view = app.view
     , onUrlRequest = app.onUrlRequest
     }
 
@@ -349,7 +348,7 @@ navigationAppWithFlags app =
     { locationToMessage = RouterMsg
     , init = initWithFlags app.init common
     , update = update common
-    , view = view common
+    , view = view app.view
     , subscriptions = subscriptions common
     , onUrlRequest = onUrlRequest common
     }
@@ -412,14 +411,129 @@ programWithFlags =
 
 
 
+-- anchor management
+
+
+type alias UserAnchorManagedAppWithFlags model msg flags aResult =
+    { delta2url : model -> model -> Maybe UrlChange
+    , location2messages : Url -> List msg
+    , init : flags -> Key -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
+    , subscriptions : model -> Sub msg
+    , view : model -> (msg -> aResult) -> Document msg
+    , onUrlRequest : UrlRequest -> msg
+    , makeAnchor : String -> Maybe msg -> aResult
+    }
+
+
+userAnchorManagedAppWithFlags2Common : UserAnchorManagedAppWithFlags model msg flags aResult -> AppCommon model msg
+userAnchorManagedAppWithFlags2Common app =
+    { delta2url = app.delta2url
+    , location2messages = app.location2messages
+    , update = app.update
+    , subscriptions = app.subscriptions
+    , onUrlRequest = app.onUrlRequest
+    }
+
+
+type alias InternalAnchorManagedAppWithFlags model msg flags =
+    { locationToMessage : Url -> msg
+    , init : flags -> Url -> Key -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
+    , view : model -> Document msg
+    , subscriptions : model -> Sub msg
+    , onUrlRequest : UrlRequest -> msg
+    }
+
+
+addPrefixed : String -> Maybe String -> String -> String
+addPrefixed prefix maybeSegment starter =
+    case maybeSegment of
+        Nothing ->
+            starter
+
+        Just segment ->
+            starter ++ prefix ++ segment
+
+
+changeToString : UrlChange -> String
+changeToString change =
+    case change of
+        NewPath _ data ->
+            data.path
+                |> addPrefixed "?" data.query
+                |> addPrefixed "#" data.fragment
+
+        NewQuery _ data ->
+            "?"
+                ++ data.query
+                |> addPrefixed "#" data.fragment
+
+        NewFragment _ fragment ->
+            "#" ++ fragment
+
+
+anchorManagedAppWithFlags : UserAnchorManagedAppWithFlags model msg flags aResult -> InternalAnchorManagedAppWithFlags (WrappedModel model) (WrappedMsg msg) flags
+anchorManagedAppWithFlags app =
+    let
+        common =
+            userAnchorManagedAppWithFlags2Common app
+
+        aForUpdateDelta : WrappedModel model -> msg -> aResult
+        aForUpdateDelta (WrappedModel oldUserModel routerModel) msg =
+            let
+                ( newModel, _ ) =
+                    app.update msg oldUserModel
+
+                urlChange =
+                    app.delta2url oldUserModel newModel
+            in
+            case urlChange of
+                Nothing ->
+                    app.makeAnchor (Url.toString routerModel.reportedUrl) (Just msg)
+
+                Just change ->
+                    app.makeAnchor (changeToString change) Nothing
+
+        viewWithA : WrappedModel model -> Document (WrappedMsg msg)
+        viewWithA (WrappedModel userModel routerModel) =
+            docMap UserMsg <| app.view userModel <| aForUpdateDelta (WrappedModel userModel routerModel)
+    in
+    { locationToMessage = RouterMsg
+    , init = initWithFlags app.init common
+    , update = update common
+    , view = viewWithA
+    , subscriptions = subscriptions common
+    , onUrlRequest = onUrlRequest common
+    }
+
+
+runAnchorManagedAppWithFlags : InternalAnchorManagedAppWithFlags model msg flags -> Program flags model msg
+runAnchorManagedAppWithFlags app =
+    Browser.application
+        { init = app.init
+        , update = app.update
+        , view = app.view
+        , onUrlChange = app.locationToMessage
+        , onUrlRequest = app.onUrlRequest
+        , subscriptions = app.subscriptions
+        }
+
+
+anchorManagedProgramWithFlags : UserAnchorManagedAppWithFlags model msg flags aResult -> RouteUrlProgram flags model msg
+anchorManagedProgramWithFlags =
+    runAnchorManagedAppWithFlags << anchorManagedAppWithFlags
+
+
+
 -- IMPLEMENTATION
 
 
 {-| Call the provided view function with the user's part of the model
 -}
-view : AppCommon model msg -> WrappedModel model -> Document (WrappedMsg msg)
-view app (WrappedModel model _) =
-    app.view model
+view : (model -> Document msg) -> WrappedModel model -> Document (WrappedMsg msg)
+view v (WrappedModel model _) =
+    v model
         |> docMap UserMsg
 
 
