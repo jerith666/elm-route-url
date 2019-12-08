@@ -75,7 +75,7 @@ import Url exposing (..)
 
 
 -- THINGS CLIENTS PROVIDE
-{- The configuration required to use this module to create a `Program`.
+{- The configuration required to use this module to create a `Program flags`.
 
    The `init`, `update`, `subscriptions` and `view` fields have the same meaning
    as they do in [`Html.program`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#program)
@@ -116,28 +116,8 @@ import Url exposing (..)
        changes to the model that the new URL implies.
 
 -}
-{- type alias App model msg =
-   { delta2url : model -> model -> Maybe UrlChange
-   , location2messages : Url -> List msg
-   , init : ( model, Cmd msg )
-   , update : msg -> model -> ( model, Cmd msg )
-   , subscriptions : model -> Sub msg
-   , view : model -> Document msg
-   }
--}
 
 
-{-| The configuration needed to use this module to make a `Program flags`.
-
-The `init`, `update`, `subscriptions` and `view` fields have the same meaning
-as they do in
-[`Html.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#programWithFlags)
--- that is, you should provide what you normally provide to that function.
-
-So, the special functions are `delta2url` and `location2messages`,
-which are described above, under [`App`](#App).
-
--}
 type alias AppWithFlags model msg flags =
     { delta2url : model -> model -> Maybe UrlChange
     , location2messages : Url -> List msg
