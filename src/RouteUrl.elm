@@ -145,7 +145,7 @@ type alias AppWithFlags model msg flags =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Document msg
-    , onUrlRequest : UrlRequest -> msg
+    , onExternalUrlRequest : String -> msg
     }
 
 
@@ -158,7 +158,7 @@ type alias AppCommon model msg =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Document msg
-    , onUrlRequest : UrlRequest -> msg
+    , onExternalUrlRequest : String -> msg
     }
 
 
@@ -169,7 +169,7 @@ appWithFlags2Common app =
     , update = app.update
     , subscriptions = app.subscriptions
     , view = app.view
-    , onUrlRequest = app.onUrlRequest
+    , onExternalUrlRequest = app.onExternalUrlRequest
     }
 
 
@@ -460,7 +460,12 @@ subscriptions app (WrappedModel model _) =
 
 onUrlRequest : AppCommon model msg -> UrlRequest -> WrappedMsg msg
 onUrlRequest app req =
-    app.onUrlRequest req |> UserMsg
+    case req of
+        Internal location ->
+            RouterMsg location
+
+        External location ->
+            app.onExternalUrlRequest location |> UserMsg
 
 
 {-| Call the provided init function with the user's part of the model
