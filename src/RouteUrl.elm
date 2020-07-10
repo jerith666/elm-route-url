@@ -126,7 +126,7 @@ type alias AppWithFlags model msg flags =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Document msg
-    , onUrlRequest : UrlRequest -> msg
+    , onExternalUrlRequest : String -> msg
     }
 
 
@@ -138,7 +138,7 @@ type alias AppCommon model msg =
     , location2messages : Url -> List msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
-    , onUrlRequest : UrlRequest -> msg
+    , onExternalUrlRequest : String -> msg
     }
 
 
@@ -148,7 +148,7 @@ appWithFlags2Common app =
     , location2messages = app.location2messages
     , update = app.update
     , subscriptions = app.subscriptions
-    , onUrlRequest = app.onUrlRequest
+    , onExternalUrlRequest = app.onExternalUrlRequest
     }
 
 
@@ -421,7 +421,7 @@ type alias UserAnchorManagedAppWithFlags model msg flags aResult =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> (msg -> aResult) -> Document msg
-    , onUrlRequest : UrlRequest -> msg
+    , onExternalUrlRequest : String -> msg
     , makeAnchor : String -> Maybe msg -> aResult
     }
 
@@ -432,7 +432,7 @@ userAnchorManagedAppWithFlags2Common app =
     , location2messages = app.location2messages
     , update = app.update
     , subscriptions = app.subscriptions
-    , onUrlRequest = app.onUrlRequest
+    , onExternalUrlRequest = app.onExternalUrlRequest
     }
 
 
@@ -554,7 +554,12 @@ subscriptions app (WrappedModel model _) =
 
 onUrlRequest : AppCommon model msg -> UrlRequest -> WrappedMsg msg
 onUrlRequest app req =
-    app.onUrlRequest req |> UserMsg
+    case req of
+        Internal location ->
+            RouterMsg location
+
+        External location ->
+            app.onExternalUrlRequest location |> UserMsg
 
 
 {-| Call the provided init function with the user's part of the model
