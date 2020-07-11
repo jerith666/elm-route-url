@@ -559,7 +559,7 @@ onUrlRequest : AppCommon model msg -> UrlRequest -> WrappedMsg msg
 onUrlRequest app req =
     case req of
         Internal location ->
-            RouterMsgOnUrlRequestInternal location
+            RouterMsgOnUrlRequestInternal <| Debug.log "RouteUrl.onUrlRequest Internal" location
 
         External location ->
             app.onExternalUrlRequest (Debug.log "RouteUrl.onUrlRequest External" location) |> UserMsg
