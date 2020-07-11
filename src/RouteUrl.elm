@@ -655,7 +655,7 @@ checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
 checkDistinctUrl old new =
     let
         newUrl =
-            apply old new
+            Debug.log "RouteUrl.checkDistinctUrl newUrl" <| apply (Debug.log "RouteUrl.checkDistinctUrl old" old) (Debug.log "RouteUrl.checkDistinctUrl new" new)
     in
     case old == newUrl of
         True ->
@@ -669,7 +669,7 @@ checkDistinctUrl old new =
 -}
 update : AppCommon model msg -> WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
 update app msg (WrappedModel user router) =
-    case msg of
+    case Debug.log "RouteUrl.update" msg of
         RouterMsg location ->
             let
                 -- This is the same, no matter which path we follow below. Basically,
@@ -718,7 +718,7 @@ update app msg (WrappedModel user router) =
                     app.delta2url user newUserModel
                         |> Maybe.andThen (checkDistinctUrl router.reportedUrl)
             in
-            case maybeUrlChange of
+            case Debug.log "RouteUrl.update maybeUrlChange" maybeUrlChange of
                 Just urlChange ->
                     ( WrappedModel newUserModel <|
                         { reportedUrl = apply router.reportedUrl urlChange
