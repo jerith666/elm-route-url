@@ -562,7 +562,7 @@ onUrlRequest app req =
             RouterMsgOnUrlRequestInternal location
 
         External location ->
-            app.onExternalUrlRequest location |> UserMsg
+            app.onExternalUrlRequest (Debug.log "RouteUrl.onUrlRequest External" location) |> UserMsg
 
 
 {-| Call the provided init function with the user's part of the model
