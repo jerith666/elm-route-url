@@ -4,7 +4,7 @@ module RouteUrl exposing
     , programWithFlags, RouteUrlProgram
     , NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
     , WrappedModel, unwrapModel, mapModel
-    , WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
+    , WrappedMsg, wrapUserMsg
     , anchorManagedAppWithFlags, anchorManagedProgramWithFlags, runAnchorManagedAppWithFlags
     )
 
@@ -240,6 +240,7 @@ of course).
 type alias RouterModel =
     { reportedUrl : Url
     , expectedUrlChanges : Int
+    , key : Key
     }
 
 
@@ -270,22 +271,25 @@ mapModel mapper (WrappedModel user router) =
 internally by RouteUrl, and others are passed on to the application.
 -}
 type WrappedMsg user
-    = RouterMsg Url
+    = RouterMsgOnUrlChange Url
+    | RouterMsgOnUrlRequestInternal Url
     | UserMsg user
 
 
-{-| Given the wrapped msg type that `RouteUrl` uses, either apply a function
-that works on a `Location`, or apply a function that works on the msg type
-that your program uses.
--}
-unwrapMsg : (Url -> a) -> (user -> a) -> WrappedMsg user -> a
-unwrapMsg handleLocation handleUserMsg wrapped =
-    case wrapped of
-        RouterMsg location ->
-            handleLocation location
 
-        UserMsg msg ->
-            handleUserMsg msg
+{- | Given the wrapped msg type that `RouteUrl` uses, either apply a function
+   that works on a `Location`, or apply a function that works on the msg type
+   that your program uses.
+-}
+{- unwrapMsg : (Url -> a) -> (user -> a) -> WrappedMsg user -> a
+   unwrapMsg handleLocation handleUserMsg wrapped =
+       case wrapped of
+           RouterMsg location ->
+               handleLocation location
+
+           UserMsg msg ->
+               handleUserMsg msg
+-}
 
 
 {-| Given the kind of message your program uses, wrap it in the kind of msg
@@ -296,17 +300,16 @@ wrapUserMsg =
     UserMsg
 
 
-{-| Given a location, make the kind of message that `RouteUrl` uses.
 
-I'm not sure you'll ever need this ... perhaps for testing?
+{- | Given a location, make the kind of message that `RouteUrl` uses.
+
+   I'm not sure you'll ever need this ... perhaps for testing?
 
 -}
-wrapLocation : Url -> WrappedMsg user
-wrapLocation =
-    RouterMsg
-
-
-
+{- wrapLocation : Url -> WrappedMsg user
+   wrapLocation =
+       RouterMsg
+-}
 -- ACTUALLY CREATING A PROGRAM
 
 
@@ -345,7 +348,7 @@ navigationAppWithFlags app =
         common =
             appWithFlags2Common app
     in
-    { locationToMessage = RouterMsg
+    { locationToMessage = RouterMsgOnUrlChange
     , init = initWithFlags app.init common
     , update = update common
     , view = view app.view
@@ -499,7 +502,7 @@ anchorManagedAppWithFlags app =
         viewWithA (WrappedModel userModel routerModel) =
             docMap UserMsg <| app.view userModel <| aForUpdateDelta (WrappedModel userModel routerModel)
     in
-    { locationToMessage = RouterMsg
+    { locationToMessage = RouterMsgOnUrlChange
     , init = initWithFlags app.init common
     , update = update common
     , view = viewWithA
@@ -556,7 +559,7 @@ onUrlRequest : AppCommon model msg -> UrlRequest -> WrappedMsg msg
 onUrlRequest app req =
     case req of
         Internal location ->
-            RouterMsg location
+            RouterMsgOnUrlRequestInternal location
 
         External location ->
             app.onExternalUrlRequest location |> UserMsg
@@ -574,6 +577,7 @@ initWithFlags appInit app flags location key =
         routerModel =
             { expectedUrlChanges = 0
             , reportedUrl = location
+            , key = key
             }
     in
     ( WrappedModel userModel routerModel
@@ -583,20 +587,24 @@ initWithFlags appInit app flags location key =
 
 {-| Call the provided init function with the user's part of the model
 -}
-init : ( model, Cmd msg ) -> AppCommon model msg -> Url -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-init appInit app location =
-    let
-        ( userModel, command ) =
-            sequence app.update (app.location2messages location) appInit
 
-        routerModel =
-            { expectedUrlChanges = 0
-            , reportedUrl = location
-            }
-    in
-    ( WrappedModel userModel routerModel
-    , Cmd.map UserMsg command
-    )
+
+
+{- init : ( model, Cmd msg ) -> AppCommon model msg -> Url -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+   init appInit app location =
+       let
+           ( userModel, command ) =
+               sequence app.update (app.location2messages location) appInit
+
+           routerModel =
+               { expectedUrlChanges = 0
+               , reportedUrl = location
+               }
+       in
+       ( WrappedModel userModel routerModel
+       , Cmd.map UserMsg command
+       )
+-}
 
 
 getMetadata : UrlChange -> UrlChangeMetadata
@@ -670,7 +678,15 @@ checkDistinctUrl old new =
 update : AppCommon model msg -> WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
 update app msg (WrappedModel user router) =
     case Debug.log "RouteUrl.update" msg of
-        RouterMsg location ->
+        RouterMsgOnUrlRequestInternal requestedUrl ->
+            -- note: we do *not* increment expectedUrlChanges here, because we are *not* doing
+            -- this url change in response to a change in the app's state, but rather this is
+            -- an href which came from "outside" (as discussed below)
+            ( WrappedModel user router
+            , pushUrl router.key <| Url.toString requestedUrl
+            )
+
+        RouterMsgOnUrlChange location ->
             let
                 -- This is the same, no matter which path we follow below. Basically,
                 -- we're keeping track of the last reported Url (i.e. what's in the location
@@ -685,6 +701,7 @@ update app msg (WrappedModel user router) =
 
                         else
                             0
+                    , key = router.key
                     }
             in
             if router.expectedUrlChanges > 0 then
@@ -723,6 +740,7 @@ update app msg (WrappedModel user router) =
                     ( WrappedModel newUserModel <|
                         { reportedUrl = apply router.reportedUrl urlChange
                         , expectedUrlChanges = router.expectedUrlChanges + 1
+                        , key = router.key
                         }
                     , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd router.reportedUrl urlChange, userCommand ]
                     )
